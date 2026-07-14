@@ -1,0 +1,8 @@
+# The files under host_test/ are ESP-IDF glue for the Linux host-test target, not
+# host-native code, so the OS-agnostic compile_flags.txt gives them the wrong
+# flags -- their TEST_CASE / unity_run_all_tests() come from ESP-IDF's own Unity.
+# Point clangd at the ESP-IDF Linux build's own compile database (produced by
+# `make host-idf` in build/idf-linux, with native non-cross flags clangd can
+# consume) so these files get their real include paths and diagnose accurately.
+CompileFlags:
+  CompilationDatabase: ../build/idf-linux
