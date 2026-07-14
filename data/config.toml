@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: 2026 Benoit Quiniou
+# SPDX-License-Identifier: MIT
+
+# VBAN-Key configuration (TOML), loaded from the LittleFS 'storage' partition at boot.
+# Repeated blocks use [[array-of-tables]] brackets — one [[button]] per button.
+
+
+[wifi]
+# Access point (network) to join in station mode. Stored in plaintext on flash.
+ssid     = "my-network"
+password = "change-me"               # leave empty for an open network
+
+
+[global]
+# Config format version (SemVer). MAJOR mismatch -> loader refuses/migrates.
+version = "1.0.0"
+
+# Log verbosity: fatal | error | warning | info | debug
+log_level = "info"
+
+# Default destination for every stream; a stream may override either field.
+default_ip_address = "192.168.1.255" # .255 = subnet broadcast (VBAN is UDP)
+default_port       = 6980
+
+
+# STREAMS — "vbanN" in an action resolves by id + protocol:
+#   SendText("vbanN", ...) -> [[text]] block with id = N
+#   SendMidi("vbanN", ...) -> [[midi]] block with id = N
+# text and midi ids are separate namespaces.
+
+[[text]]
+id          = 1
+ip_address  = "192.168.1.57"         # optional if default_ip_address is set
+stream_name = "Command1"             # <=16 ASCII chars; default "Command<id>"
+
+[[midi]]
+id          = 1
+ip_address  = "192.168.1.57"
+stream_name = "MIDI1"                # default "MIDI<id>"
+
+
+# BUTTONS — one [[button]] per button. init/on/off entries are command scripts;
+# at least one of on/off is required.
+
+[[button]]
+id      = 1
+type    = "latch"                    # latch = toggle per press | momentary = on while held
+gpi_pin = 4                          # ESP32-C3: avoid 12-17 (flash), 18/19 (USB), 2/8/9 (strapping)
+on = '''
+SendText("vban1",
+  Strip(0).mute = 1;
+  Strip(1).mute = 1;
+);
+Wait(200);
+SendMidi("vban1", "note-on", 1, 60, 127);
+'''
+off = '''SendText("vban1", Strip(0).mute = 0;);'''
+
+# Momentary push-to-talk: unmute while held.
+[[button]]
+id      = 2
+type    = "momentary"
+gpi_pin = 5
+on  = '''SendText("vban1", Strip(0).mute = 0;);'''
+off = '''SendText("vban1", Strip(0).mute = 1;);'''

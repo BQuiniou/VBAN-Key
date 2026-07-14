@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Benoit Quiniou
+# SPDX-License-Identifier: MIT
+
+CONFIG_IDF_TARGET="esp32c3"
+
+# Custom partition table with a LittleFS 'storage' partition for the config file.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# ESP32-C3 SuperMini is commonly 4 MB flash.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
