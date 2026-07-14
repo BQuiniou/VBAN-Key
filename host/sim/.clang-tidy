@@ -1,0 +1,8 @@
+# Host-only native simulator. main() (CLI parsing + setup + input loop) and the
+# terminal-protocol negotiation (detect_protocol) are inherently branchy entry
+# points; the complexity/size thresholds tuned for the firmware components don't
+# fit here. Everything else is inherited from the root config.
+InheritParentConfig: true
+Checks: >
+  -readability-function-cognitive-complexity,
+  -readability-function-size
