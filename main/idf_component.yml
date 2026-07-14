@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Benoit Quiniou
+# SPDX-License-Identifier: MIT
+
+dependencies:
+  idf: ">=5.0"
+  # LittleFS for the runtime config partition (used by platform/plat_fs.c):
+  joltwallet/littlefs: "*"

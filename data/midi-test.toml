@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 Benoit Quiniou
+# SPDX-License-Identifier: MIT
+
+# MIDI-focused playground config — exercises every SendMidi form.
+# Run it through the sim:
+#   ./build/host/vbankey-sim data/midi-test.toml --demo    # fires button 1 (index 0)
+#   ./build/host/vbankey-sim data/midi-test.toml           # interactive: keys 1/2/3 toggle buttons
+# Add --send to actually transmit VBAN-MIDI to the default_ip target.
+
+[wifi]
+ssid     = "my-network"
+password = "change-me"
+
+[global]
+version            = "1.0.0"
+log_level          = "info"
+default_ip_address = "192.168.1.255" # subnet broadcast
+default_port       = 6980
+
+[[text]]
+id          = 1
+stream_name = "Command1"
+
+[[midi]]
+id          = 1
+stream_name = "MIDI1"
+
+# button 1 (fired by --demo): a C-major chord on press, note-offs on release.
+[[button]]
+id      = 1
+type    = "latch"
+gpi_pin = 4
+on = '''
+SendMidi("vban1", "note-on", 1, 60, 127);
+SendMidi("vban1", "note-on", 1, 64, 110);
+SendMidi("vban1", "note-on", 1, 67, 96);
+'''
+off = '''
+SendMidi("vban1", "note-off", 1, 60, 0);
+SendMidi("vban1", "note-off", 1, 64, 0);
+SendMidi("vban1", "note-off", 1, 67, 0);
+'''
+
+# button 2: control-change + program-change on press; a short SysEx on release.
+[[button]]
+id      = 2
+type    = "momentary"
+gpi_pin = 5
+on  = '''SendMidi("vban1", "ctrl-change", 1, 7, 100); SendMidi("vban1", "prg-change", 1, 5);'''
+off = '''SendMidi("vban1", "data", 240, 67, 16, 76, 0, 247);'''
+
+# button 3: channel-16 boundary note, and a longer SysEx (universal non-realtime).
+[[button]]
+id      = 3
+type    = "momentary"
+gpi_pin = 6
+on  = '''SendMidi("vban1", "note-on", 16, 48, 64);'''
+off = '''SendMidi("vban1", "data", 240, 126, 127, 6, 1, 247);'''
