@@ -1,0 +1,59 @@
+# clang-tidy for the VBAN-Key C99 firmware.
+# Trimmed from the house C++ config: dropped modernize-* and
+# cppcoreguidelines-* (C++-oriented — noisy or inapplicable in C); added
+# cert-* (C security/correctness). bugprone-* and clang-analyzer-* are the
+# high-value core for embedded C.
+#
+# Run against the compile database (set CMAKE_EXPORT_COMPILE_COMMANDS=ON):
+#   run-clang-tidy -p build
+#   clang-tidy -p build path/to/file.c
+#
+# Disabled checks (with rationale):
+#   readability-magic-numbers -- wire-protocol/register code is full of
+#     intentional constants (VBAN header offsets, GPIO numbers); pure noise here.
+#   readability-avoid-nested-conditional-operator -- a chained ternary as a small
+#     value->string map (`a ? "X" : b ? "Y" : "Z"`) is idiomatic and readable here.
+#   readability-identifier-length -- short names (`i`, `n`, `fd`) are idiomatic.
+#   readability-implicit-bool-conversion -- int<->bool implicit conversions are
+#     idiomatic C (bit tests, isspace()/signal() returns, etc.).
+#   readability-avoid-const-params-in-decls -- pedantic style about const in
+#     prototypes; the dominant noise once east-const is enforced.
+#   readability-use-concise-preprocessor-directives -- stylistic; conflicts with
+#     the project's include-guard / #ifdef style.
+#   readability-enum-initial-value (+ its cert-int09-c alias) -- enums here
+#     intentionally mix explicit protocol values with implicit error sequences.
+#   bugprone-easily-swappable-parameters -- fires on any two same-typed args.
+#   misc-include-cleaner -- transitive includes (e.g. config.h pulling in
+#     tomlc17.h) are intentional; demanding every symbol's header be direct is noise.
+#   performance-no-int-to-ptr -- int->ptr casts reach memory-mapped registers.
+#   performance-enum-size -- recommends C++11/C23 `enum : uint8_t`, not valid C99.
+#   clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling --
+#     recommends non-portable C11 Annex K `_s` functions; bad advice for portable C.
+---
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  misc-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-avoid-nested-conditional-operator,
+  -readability-identifier-length,
+  -readability-implicit-bool-conversion,
+  -readability-avoid-const-params-in-decls,
+  -readability-use-concise-preprocessor-directives,
+  -readability-enum-initial-value,
+  -cert-int09-c,
+  -bugprone-easily-swappable-parameters,
+  -misc-include-cleaner,
+  -performance-no-int-to-ptr,
+  -performance-enum-size,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+ExcludeHeaderFilterRegex: 'tomlc17|unity'   # never lint vendored headers (tomlc17, Unity)
+FormatStyle:      file
