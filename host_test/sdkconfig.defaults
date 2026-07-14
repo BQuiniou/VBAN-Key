@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Benoit Quiniou
+# SPDX-License-Identifier: MIT
+
+CONFIG_IDF_TARGET="linux"
+
+# Compile the TEST_CASE registration + unity_run_all_tests() runner.
+CONFIG_UNITY_ENABLE_IDF_TEST_RUNNER=y
