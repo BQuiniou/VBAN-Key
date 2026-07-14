@@ -1,0 +1,7 @@
+# Host/target test component. Assert-heavy Unity TEST_CASE bodies legitimately
+# exceed the complexity/size thresholds -- those metrics don't carry their usual
+# meaning for straight-line test code. Everything else is inherited from root.
+InheritParentConfig: true
+Checks: >
+  -readability-function-cognitive-complexity,
+  -readability-function-size
