@@ -67,3 +67,9 @@ formatting/linting so it stays byte-for-byte upstream.
 
     make sim
     make demo
+
+## TODO
+
+- **Continuous integration** — GitHub Actions running the build + test lanes (native host, ESP-IDF Linux, firmware, on-chip build) on every push.
+- **On-chip real-world test** — flash an ESP32-C3 and validate end-to-end against a live Voicemeeter instance.
+- **Wiki** — illustrated guide and step-by-step instructions to build a VBAN keypad (wiring, enclosure, flashing, configuration).
