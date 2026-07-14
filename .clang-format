@@ -1,0 +1,50 @@
+# clang-format for the VBAN-Key C99 firmware.
+# Mirrors the house C++ style (Allman braces, 4-space indent, 128 cols,
+# east-const, left-aligned pointers) with the C++-only options removed.
+# clang-format has no "C" language mode; C is parsed as Language: Cpp.
+---
+Language:        Cpp
+BasedOnStyle:    LLVM
+# No `Standard:` key — it selects a *C++* standard for parsing and is
+# meaningless for C99; the default avoids forcing C++ constructs.
+
+IndentWidth:     4
+TabWidth:        4
+UseTab:          Never
+ColumnLimit:     128
+
+IndentPPDirectives: AfterHash        # indent nested #if/#ifdef bodies (portability guards)
+
+# Allman braces via Custom, so empty scopes stay as `{}` on one line.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:        true
+  AfterControlStatement: Always
+  AfterEnum:             true
+  AfterExternBlock:      true      # relevant if you wrap headers in extern "C" for C++ callers
+  AfterFunction:         true
+  AfterStruct:           true
+  AfterUnion:            true
+  BeforeElse:            true
+  BeforeWhile:           false
+  IndentBraces:          false
+  SplitEmptyFunction:    false
+  SplitEmptyRecord:      false
+
+AlignAfterOpenBracket: BlockIndent   # wrapped args indent one step; closing ) on its own line
+PointerAlignment:      Left
+QualifierAlignment:    Right         # enforce east-const (`char const *`)
+SpaceAfterCStyleCast:  true          # `(uint8_t) x` — idiomatic and readable in C
+
+# C carries lots of #define constant tables (VBAN header offsets, pin maps);
+# align them into columns. Drop this line if you'd rather not.
+AlignConsecutiveMacros: Consecutive
+
+AllowShortFunctionsOnASingleLine:    Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine:        false
+AllowShortBlocksOnASingleLine:       Empty
+
+ReflowComments: Never                # keep comments as written
+SortIncludes:   false                # include order is often intentional
+...

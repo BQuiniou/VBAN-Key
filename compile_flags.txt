@@ -1,0 +1,14 @@
+-xc
+-std=c11
+-Icomponents/vban/include
+-Icomponents/common/include
+-Icomponents/config/include
+-Icomponents/vban_script/include
+-Icomponents/button/include
+-Icomponents/runtime/include
+-Icomponents/vban_net/include
+-Icomponents/tomlc17
+-Ithird_party/unity
+-Ihost/unity_shim
+-DUNITY_INCLUDE_CONFIG_H
+-Ihost/sim

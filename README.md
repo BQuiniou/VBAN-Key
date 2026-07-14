@@ -1,0 +1,69 @@
+# VBAN-Key
+
+Minimalist firmware that sends VBAN UDP commands (TEXT / MIDI) to Voicemeeter
+peers on key-press / GPI events.
+
+- **Target:** ESP32-C3 (SuperMini), Wi-Fi station mode
+- **Framework:** ESP-IDF, C99
+- **License:** MIT — see [LICENSE](LICENSE)
+
+## Layout
+
+- `components/` — portable, pure-C99 core (no ESP-IDF deps, host-testable)
+  - `vban/` — VBAN wire-format header + packet builders (header-only)
+  - `common/` — shared enums + a small bitset helper
+  - `config/` — TOML config → model (parsed with the vendored tomlc17)
+  - `vban_script/` — `SendText()` / `SendMidi()` / `Wait()` parser + executor
+  - `button/` — debounce + edge + mode state machine
+  - `runtime/` — live buttons: sense → FSM → dispatch
+  - `vban_net/` — VBAN packet assembly + UDP send (shared host / ESP-IDF)
+  - `tomlc17/` — vendored TOML parser (third party)
+- `main/` — app entry + the ESP-IDF platform shim (`platform/`)
+- `data/` — runtime config flashed to the LittleFS `storage` partition
+- `host/` — standalone native build (Ninja), with the Unity shim (`host/unity_shim/`)
+  and interactive simulator (`host/sim/`)
+- `components/<comp>/test/` — component Unity tests
+- `host/sim/test/` — simulator Unity tests
+- `third_party/unity/` — vendored Unity test framework (third party)
+
+## Third-party dependencies
+
+Two components are vendored, both MIT-licensed — full attribution in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md):
+
+- **tomlc17** (`components/tomlc17/`) — the TOML config parser, compiled into the firmware.
+- **Unity** (`third_party/unity/`) — the C unit-test framework, used only by the host tests.
+
+Each vendored tree keeps its own `LICENSE` and is excluded from this project's
+formatting/linting so it stays byte-for-byte upstream.
+
+## Prerequisites
+
+- **Host tests** (`make host`, `make sim`) need only CMake, Ninja, and a C compiler — no ESP-IDF.
+- **Device firmware** (`make build`, `make flash`) and the ESP-IDF host-test lane (`make host-idf`)
+  need ESP-IDF **v5.5.x**, installed and activated once per shell:
+
+      mkdir -p ~/esp && cd ~/esp
+      git clone -b v5.5.4 --recursive https://github.com/espressif/esp-idf.git
+      cd esp-idf && ./install.sh esp32c3
+      . ~/esp/esp-idf/export.sh
+
+  The `joltwallet/littlefs` dependency is fetched automatically on the first build.
+
+## Build (device)
+
+    make set-target
+    make build
+    make flash
+
+## Test (host)
+
+    make host        # native Unity suites (CMake + Ninja + CTest)
+    make host-idf    # the same suites, compiled and run through ESP-IDF's Linux target
+
+`make test` is an alias for `make host`.
+
+## Simulator (host)
+
+    make sim
+    make demo
