@@ -1,0 +1,2 @@
+# Vendored third-party (tomlc17) — do not lint.
+Checks: '-*'

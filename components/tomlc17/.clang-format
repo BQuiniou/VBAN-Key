@@ -1,0 +1,3 @@
+# Vendored third-party (tomlc17) — keep upstream formatting; never reformat.
+DisableFormat: true
+SortIncludes: false
