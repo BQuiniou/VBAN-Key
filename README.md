@@ -1,7 +1,7 @@
 # VBAN-Key
 
-Minimalist firmware that sends VBAN UDP commands (TEXT / MIDI) to Voicemeeter
-peers on key-press / GPI events.
+Minimalist firmware that sends [VBAN](https://vb-audio.com/Voicemeeter/VBANProtocol_Specifications.pdf)
+UDP commands (TEXT / MIDI) to Voicemeeter peers on key-press / GPI events.
 
 - **Target:** ESP32-C3 (SuperMini), Wi-Fi station mode
 - **Framework:** ESP-IDF, C99
