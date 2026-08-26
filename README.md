@@ -70,6 +70,12 @@ formatting/linting so it stays byte-for-byte upstream.
     make build
     make flash
 
+`make set-target` creates a fresh generated ESP-IDF configuration from
+`sdkconfig.defaults`. Run it for a new build directory and rerun it whenever
+`sdkconfig.defaults` changes; `make build` preserves an existing generated
+configuration and does not apply changed defaults over previously selected
+values.
+
 ## Test (host)
 
     make host        # native Unity suites (CMake + Ninja + CTest)

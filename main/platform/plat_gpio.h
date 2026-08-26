@@ -6,6 +6,8 @@
 
 #include <stdbool.h>
 
+#define PLAT_GPIO_MAX_BUTTONS 10U
+
 // ESP-IDF GPIO shim: configure button inputs and status outputs.
 void plat_gpio_init(void);
 
