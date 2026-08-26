@@ -3,8 +3,11 @@
 
 #include "plat_time.h"
 
+#include "esp_timer.h"
+
 uint32_t plat_time_millis(void)
 {
-    // TODO: return (uint32_t) (esp_timer_get_time() / 1000);
-    return 0U;
+    uint64_t const microseconds = (uint64_t) esp_timer_get_time();
+
+    return (uint32_t) (microseconds / 1000U);
 }

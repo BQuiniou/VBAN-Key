@@ -3,6 +3,10 @@
 
 CONFIG_IDF_TARGET="esp32c3"
 
+# Use native USB for the console, leaving UART0 GPIO20/GPIO21 available.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
 # Custom partition table with a LittleFS 'storage' partition for the config file.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"

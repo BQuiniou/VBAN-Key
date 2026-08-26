@@ -3,8 +3,8 @@
 
 # MIDI-focused playground config — exercises every SendMidi form.
 # Run it through the sim:
-#   ./build/host/vbankey-sim data/midi-test.toml --demo    # fires button 1 (index 0)
-#   ./build/host/vbankey-sim data/midi-test.toml           # interactive: keys 1/2/3 toggle buttons
+#   ./build/host/vbankey-sim host/sim/test/config/midi-test.toml --demo
+#   ./build/host/vbankey-sim host/sim/test/config/midi-test.toml
 # Add --send to actually transmit VBAN-MIDI to the default_ip target.
 
 [wifi]
