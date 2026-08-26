@@ -18,6 +18,7 @@ HOST_ARCH := $(shell uname -m)
 BUILD_HOST      ?= build/$(HOST_OS)-$(HOST_ARCH)
 BUILD_IDF       ?= build/idf-esp32c3
 BUILD_IDF_LINUX ?= build/idf-linux
+BUILD_GPIO_TEST ?= build/idf-gpio-test
 GENERATOR       ?= Ninja
 IDF             ?= idf.py
 
@@ -26,8 +27,10 @@ IDF             ?= idf.py
 # and never need a `set-target` flip. The esp32c3 target is read from
 # sdkconfig.defaults; the Linux target is selected explicitly (see host-idf).
 IDF_C3 = $(IDF) -B $(BUILD_IDF) -D SDKCONFIG=$(BUILD_IDF)/sdkconfig
+IDF_GPIO_TEST = $(IDF) -C device_test/gpio -B $(CURDIR)/$(BUILD_GPIO_TEST) \
+	-D SDKCONFIG=$(CURDIR)/$(BUILD_GPIO_TEST)/sdkconfig
 
-.PHONY: help host test sim demo build flash monitor menuconfig set-target reconfigure host-idf clean
+.PHONY: help host test sim demo build flash monitor menuconfig set-target reconfigure host-idf gpio-test-build gpio-test-flash gpio-test-monitor clean
 
 help: ## Show available targets
 	@grep '^[a-zA-Z_-][a-zA-Z_-]*:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -69,6 +72,15 @@ host-idf: ## Build + run all component tests via the ESP-IDF Linux target (build
 	$(IDF) -C host_test -B $(CURDIR)/$(BUILD_IDF_LINUX) \
 	    -D SDKCONFIG=$(CURDIR)/$(BUILD_IDF_LINUX)/sdkconfig --preview set-target linux build
 	$(CURDIR)/$(BUILD_IDF_LINUX)/vbankey_host_test.elf
+
+gpio-test-build: ## Build the ESP32-C3 GPI hardware-test application
+	$(IDF_GPIO_TEST) build
+
+gpio-test-flash: ## Flash the GPI hardware-test application
+	$(IDF_GPIO_TEST) flash
+
+gpio-test-monitor: ## Open the GPI hardware-test serial monitor
+	$(IDF_GPIO_TEST) monitor
 
 clean: ## Remove all build outputs
 	rm -rf build

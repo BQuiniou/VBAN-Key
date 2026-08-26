@@ -40,13 +40,27 @@ formatting/linting so it stays byte-for-byte upstream.
 ## Prerequisites
 
 - **Host tests** (`make host`, `make sim`) need only CMake, Ninja, and a C compiler — no ESP-IDF.
-- **Device firmware** (`make build`, `make flash`) and the ESP-IDF host-test lane (`make host-idf`)
+- **Device firmware** (`make build`, `make flash`), target linting (`idf.py clang-check`), and the
+  ESP-IDF host-test lane (`make host-idf`)
   need ESP-IDF **v5.5.x**, installed and activated once per shell:
 
       mkdir -p ~/esp && cd ~/esp
       git clone -b v5.5.4 --recursive https://github.com/espressif/esp-idf.git
       cd esp-idf && ./install.sh esp32c3
       . ~/esp/esp-idf/export.sh
+
+      ./tools/idf_tools.py install esp-clang esp-clang-libs
+      . ~/esp/esp-idf/export.sh
+
+  The `export.sh` step puts `idf.py` and the RISC-V toolchain on your `PATH`, and
+  must be re-run **once in every new shell** — otherwise `make set-target` (and the
+  other device targets) fail with `idf.py: No such file or directory`. To avoid
+  re-typing the full path, add a convenience alias to your shell profile
+  (`~/.zprofile`, `~/.zshrc`, `~/.bashrc`, …):
+
+      alias get_idf='. $HOME/esp/esp-idf/export.sh'
+
+  then just run `get_idf` before building.
 
   The `joltwallet/littlefs` dependency is fetched automatically on the first build.
 
@@ -62,6 +76,14 @@ formatting/linting so it stays byte-for-byte upstream.
     make host-idf    # the same suites, compiled and run through ESP-IDF's Linux target
 
 `make test` is an alias for `make host`.
+
+## Lint (device)
+
+Activate ESP-IDF and use its Clang toolchain for ESP32-C3-specific code:
+
+    . ~/esp/esp-idf/export.sh
+    IDF_TOOLCHAIN=clang idf.py -B build/idf-clang \
+      -D SDKCONFIG=build/idf-clang/sdkconfig clang-check --exit-code
 
 ## Simulator (host)
 

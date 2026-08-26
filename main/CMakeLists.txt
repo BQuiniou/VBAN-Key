@@ -17,6 +17,8 @@ idf_component_register(
         vban_script
         button
         runtime
+    PRIV_REQUIRES
+        esp_driver_gpio
 )
 
 # The platform shim will add ESP-IDF deps as it is implemented, e.g.:

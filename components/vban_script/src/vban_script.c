@@ -45,7 +45,7 @@ static int fail_at(struct parser* parser, int result, char const* at, char const
 
 static void skip_space(struct parser* parser)
 {
-    while (isspace((unsigned char) *parser->pos) != 0)
+    while (*parser->pos != '\0' && isspace((unsigned char) *parser->pos) != 0)
     {
         ++parser->pos;
     }

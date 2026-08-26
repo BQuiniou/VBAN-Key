@@ -1,0 +1,7 @@
+# Host platform code uses system and framework macros whose expansions can add
+# branches outside the project's control. Measure the complexity of the authored
+# code, excluding branches introduced by those macros.
+InheritParentConfig: true
+CheckOptions:
+  readability-function-cognitive-complexity.IgnoreMacros: true
+
