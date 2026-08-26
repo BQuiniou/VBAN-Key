@@ -1,0 +1,7 @@
+# ESP-IDF platform code uses framework macros whose expansions add branches
+# outside the project's control. Measure the complexity of the authored code,
+# excluding branches introduced by those macros.
+InheritParentConfig: true
+CheckOptions:
+  readability-function-cognitive-complexity.IgnoreMacros: true
+

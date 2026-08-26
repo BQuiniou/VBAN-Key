@@ -1,0 +1,69 @@
+--- esp-idf-monitor 1.9.0 on <SERIAL-PORT> 115200
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+ESP-ROM:esp32c3-api1-20210207
+Build:Feb  7 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0xf (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40381e28
+--- 0x40381e28: rv_utils_wait_for_intr at <ESP-IDF>/components/riscv/include/riscv/rv_utils.h:79
+--- (inlined by) esp_cpu_wait_for_intr at <ESP-IDF>/components/esp_hw_support/cpu.c:62
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fcd5820,len:0x155c
+load:0x403cbf10,len:0xc84
+--- 0x403cbf10: esp_bootloader_get_description at <ESP-IDF>/components/esp_bootloader_format/esp_bootloader_desc.c:39
+load:0x403ce710,len:0x2fa4
+--- 0x403ce710: esp_flash_encryption_enabled at <ESP-IDF>/components/bootloader_support/src/flash_encrypt.c:89
+entry 0x403cbf1a
+--- 0x403cbf1a: call_start_cpu0 at <ESP-IDF>/components/bootloader/subproject/main/bootloader_start.c:27
+I (24) boot: ESP-IDF v5.5.4 2nd stage bootloader
+I (24) boot: compile time Aug 26 2026 15:28:08
+I (25) boot: chip revision: v0.4
+I (25) boot: efuse block revision: v1.3
+I (28) boot.esp32c3: SPI Speed      : 80MHz
+I (32) boot.esp32c3: SPI Mode       : DIO
+I (36) boot.esp32c3: SPI Flash Size : 2MB
+I (39) boot: Enabling RNG early entropy source...
+I (44) boot: Partition Table:
+I (46) boot: ## Label            Usage          Type ST Offset   Length
+I (53) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (59) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (66) boot:  2 factory          factory app      00 00 00010000 00100000
+I (72) boot: End of partition table
+I (76) esp_image: segment 0: paddr=00010020 vaddr=3c020020 size=08a04h ( 35332) map
+I (89) esp_image: segment 1: paddr=00018a2c vaddr=3fc8be00 size=01788h (  6024) load
+I (91) esp_image: segment 2: paddr=0001a1bc vaddr=40380000 size=05e5ch ( 24156) load
+I (102) esp_image: segment 3: paddr=00020020 vaddr=42000020 size=13f3ch ( 81724) map
+I (118) esp_image: segment 4: paddr=00033f64 vaddr=40385e5c size=05e58h ( 24152) load
+I (123) esp_image: segment 5: paddr=00039dc4 vaddr=50000000 size=00020h (    32) load
+I (127) boot: Loaded app from partition at offset 0x10000
+I (127) boot: Disabling RNG early entropy source...
+I (143) cpu_start: Unicore app
+I (151) cpu_start: GPIO 20 and 21 are used as console UART I/O pins
+I (152) cpu_start: Pro cpu start user code
+I (152) cpu_start: cpu freq: 160000000 Hz
+I (154) app_init: Application information:
+I (157) app_init: Project name:     vbankey_gpio_test
+I (162) app_init: App version:      0bab761-dirty
+I (167) app_init: Compile time:     Aug 26 2026 15:28:03
+I (172) app_init: ELF file SHA256:  f4e10e321...
+I (176) app_init: ESP-IDF:          v5.5.4
+I (180) efuse_init: Min chip rev:     v0.3
+I (184) efuse_init: Max chip rev:     v1.99 
+I (188) efuse_init: Chip rev:         v0.4
+I (191) heap_init: Initializing. RAM available for dynamic allocation:
+I (198) heap_init: At 3FC8E450 len 00031BB0 (198 KiB): RAM
+I (203) heap_init: At 3FCC0000 len 0001C710 (113 KiB): Retention RAM
+I (209) heap_init: At 3FCDC710 len 00002950 (10 KiB): Retention RAM
+I (215) heap_init: At 50000020 len 00001FC8 (7 KiB): RTCRAM
+I (221) spi_flash: detected chip: generic
+I (224) spi_flash: flash io: dio
+W (227) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.
+I (239) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (245) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (252) main_task: Started on CPU0
+I (252) main_task: Calling app_main()
+I (252) gpio-test: GPI hardware test starting
+I (262) gpio-test: GPIO4 ready: connect a normally-open button between GPIO4 and G
+I (262) gpio-test: GPIO4 initial state: released
+I (5082) gpio-test: GPIO4 pressed
+I (5842) gpio-test: GPIO4 released
