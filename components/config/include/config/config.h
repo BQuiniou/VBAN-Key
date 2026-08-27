@@ -7,6 +7,7 @@
 #include "common/button_mode.h"
 #include "tomlc17.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -51,7 +52,11 @@ struct cfg_button
 struct config
 {
     char const* wifi_ssid;
-    char const* wifi_password;
+    bool wifi_dhcp;
+    char const* wifi_ip;
+    char const* wifi_netmask;
+    char const* wifi_gateway;
+    char const* wifi_dns;
     char const* default_ip;
     uint16_t default_port;
     enum log_level log_level;

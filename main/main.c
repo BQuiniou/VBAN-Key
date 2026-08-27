@@ -24,6 +24,7 @@ static char const* TAG = "vban-key";
 static char config_buffer[CONFIG_BUFFER_CAPACITY];
 static struct config config_instance;
 static struct runtime runtime_instance;
+static struct vban_net network_instance;
 
 static bool runtime_read_pressed(void* ctx, int gpi_pin)
 {
@@ -102,9 +103,14 @@ void app_main(void)
     }
 
     ESP_LOGI(TAG, "Configuration loaded: %u button(s)", (unsigned int) runtime_instance.n);
-    plat_net_init();
+    if (!plat_net_init(&config_instance, &network_instance))
+    {
+        ESP_LOGE(TAG, "Network initialization failed");
+        config_free(&config_instance);
+        return;
+    }
 
-    if (!plat_exec_init(&runtime_instance, &config_instance, NULL))
+    if (!plat_exec_init(&runtime_instance, &config_instance, &network_instance))
     {
         ESP_LOGE(TAG, "Script executor initialization failed");
         config_free(&config_instance);

@@ -3,6 +3,9 @@
 
 CONFIG_IDF_TARGET="esp32c3"
 
+# Optimize release firmware for flash size while retaining runtime assertions.
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+
 # Use native USB for the console, leaving UART0 GPIO20/GPIO21 available.
 CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
 CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
@@ -10,6 +13,12 @@ CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
 # Custom partition table with a LittleFS 'storage' partition for the config file.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# Encrypt the default NVS partition with XTS-AES. The encryption keys are
+# derived by the ESP32-C3 HMAC peripheral from a device-local eFuse key.
+CONFIG_NVS_ENCRYPTION=y
+CONFIG_NVS_SEC_KEY_PROTECT_USING_HMAC=y
+CONFIG_NVS_SEC_HMAC_EFUSE_KEY_ID=0
 
 # ESP32-C3 SuperMini is commonly 4 MB flash.
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y

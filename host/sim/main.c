@@ -146,7 +146,7 @@ static void run_demo(struct sim_state* state, const struct runtime_io* io)
 
 int main(int argc, char** argv)
 {
-    char const* config_path = "data/config.toml";
+    char const* config_path = "config/examples/config.toml";
     bool demo = false;
     bool send = false;
     size_t config_length;

@@ -4,6 +4,7 @@
 idf_component_register(
     SRCS
         "main.c"
+        "platform/plat_credentials.c"
         "platform/plat_exec.c"
         "platform/plat_gpio.c"
         "platform/plat_net.c"
@@ -21,9 +22,11 @@ idf_component_register(
         vban_net
     PRIV_REQUIRES
         esp_driver_gpio
+        esp_event
+        esp_netif
         esp_timer
+        esp_wifi
         joltwallet__littlefs
+        lwip
+        nvs_flash
 )
-
-# The platform shim will add ESP-IDF deps as it is implemented, e.g.:
-#   PRIV_REQUIRES esp_wifi esp_netif nvs_flash lwip
