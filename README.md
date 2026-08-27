@@ -1,135 +1,125 @@
 # VBAN-Key
 
-Minimalist firmware that sends [VBAN](https://vb-audio.com/Voicemeeter/VBANProtocol_Specifications.pdf)
-UDP commands (TEXT / MIDI) to Voicemeeter peers on key-press / GPI events.
+Firmware for an ESP32-C3 keypad that sends
+[VBAN](https://vb-audio.com/Voicemeeter/VBANProtocol_Specifications.pdf)
+TEXT and MIDI commands over Wi-Fi.
 
-- **Target:** ESP32-C3 (SuperMini), Wi-Fi station mode
-- **Framework:** ESP-IDF, C99
-- **License:** MIT — see [LICENSE](LICENSE)
+- Target: ESP32-C3 SuperMini
+- Framework: ESP-IDF 5.5.x, C99
+- License: MIT — see [LICENSE](LICENSE)
 
-## Layout
+## Building and using
 
-- `components/` — portable, pure-C99 core (no ESP-IDF deps, host-testable)
-  - `vban/` — VBAN wire-format header + packet builders (header-only)
-  - `common/` — shared enums + a small bitset helper
-  - `config/` — TOML config → model (parsed with the vendored tomlc17)
-  - `vban_script/` — `SendText()` / `SendMidi()` / `Wait()` parser + executor
-  - `button/` — debounce + edge + mode state machine
-  - `runtime/` — live buttons: sense → FSM → dispatch
-  - `vban_net/` — VBAN packet assembly + UDP send (shared host / ESP-IDF)
-  - `tomlc17/` — vendored TOML parser (third party)
-- `main/` — app entry + the ESP-IDF platform shim (`platform/`)
-- `config/examples/` — tracked generic configuration examples
-- `config/device/` — ignored device configuration flashed to LittleFS
-- `device_tools/` — auxiliary firmware used for device setup and maintenance
-- `tools/` — host-side setup utilities
-- `host/` — standalone native build (Ninja), with the Unity shim (`host/unity_shim/`)
-  and interactive simulator (`host/sim/`)
-- `components/<comp>/test/` — component Unity tests
-- `host/sim/test/` — simulator Unity tests
-- `third_party/unity/` — vendored Unity test framework (third party)
+### Requirements
 
-## Third-party dependencies
+- An ESP32-C3 SuperMini, switches, and a data-capable USB cable.
+- CMake and Ninja.
+- [ESP-IDF 5.5.x](https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32c3/get-started/index.html)
+  installed for the ESP32-C3.
 
-Two components are vendored, both MIT-licensed — full attribution in
-[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md):
+Activate ESP-IDF in every shell used for device commands:
 
-- **tomlc17** (`components/tomlc17/`) — the TOML config parser, compiled into the firmware.
-- **Unity** (`third_party/unity/`) — the C unit-test framework, used only by the host tests.
+    . ~/esp/esp-idf/export.sh
 
-Each vendored tree keeps its own `LICENSE` and is excluded from this project's
-formatting/linting so it stays byte-for-byte upstream.
+See [Building a prototype](https://github.com/BQuiniou/VBAN-Key/wiki/Building-a-prototype)
+for the parts and wiring.
 
-## Prerequisites
+### Find the serial port
 
-- **Host tests** (`make host`, `make sim`) need only CMake, Ninja, and a C compiler — no ESP-IDF.
-- **Device firmware** (`make build`, `make flash`), target linting (`idf.py clang-check`), and the
-  ESP-IDF host-test lane (`make host-idf`)
-  need ESP-IDF **v5.5.x**, installed and activated once per shell:
+Connect the board, then list likely serial ports:
 
-      mkdir -p ~/esp && cd ~/esp
-      git clone -b v5.5.4 --recursive https://github.com/espressif/esp-idf.git
-      cd esp-idf && ./install.sh esp32c3
-      . ~/esp/esp-idf/export.sh
+    # macOS
+    ls /dev/cu.usbmodem*
 
-      ./tools/idf_tools.py install esp-clang esp-clang-libs
-      . ~/esp/esp-idf/export.sh
+    # Linux
+    ls /dev/ttyACM* /dev/ttyUSB*
 
-  The `export.sh` step puts `idf.py` and the RISC-V toolchain on your `PATH`, and
-  must be re-run **once in every new shell** — otherwise `make set-target` (and the
-  other device targets) fail with `idf.py: No such file or directory`. To avoid
-  re-typing the full path, add a convenience alias to your shell profile
-  (`~/.zprofile`, `~/.zshrc`, `~/.bashrc`, …):
+On Windows, find the `COM` port under **Device Manager → Ports (COM & LPT)**.
+If several ports are listed, disconnect and reconnect the board to identify it.
 
-      alias get_idf='. $HOME/esp/esp-idf/export.sh'
+Pass the complete result to every device command, for example
+`PORT=/dev/cu.usbmodem1101`, `PORT=/dev/ttyACM0`, or `PORT=COM3`.
 
-  then just run `get_idf` before building.
+### 1. Test the inputs
 
-  The `joltwallet/littlefs` dependency is fetched automatically on the first build.
+Build and flash the GPIO test before configuring the application:
 
-## Build (device)
+    make gpio-test-build
+    make gpio-test-flash PORT=/dev/cu.usbmodem1101
+    make gpio-test-monitor PORT=/dev/cu.usbmodem1101
 
-Create the ignored device-local configuration and select its Wi-Fi SSID:
+Press each switch and check its state in the monitor. Exit with `Ctrl+]`.
+
+### 2. Configure and provision Wi-Fi
+
+Create the device configuration:
 
     mkdir -p config/device
     cp config/examples/config.toml config/device/config.toml
     $EDITOR config/device/config.toml
 
-Do not put the Wi-Fi password in this file; provision it separately as described
-below.
+Set the Wi-Fi SSID, network settings, destination, buttons, and commands. Do not
+put the Wi-Fi password in this file.
+
+Before first-time provisioning, confirm that eFuse key block 0 is unused:
+
+    espefuse.py -p /dev/cu.usbmodem1101 summary
+
+Then flash the provisioning firmware and store the credential:
+
+    make wifi-provision-build
+    make wifi-provision-flash PORT=/dev/cu.usbmodem1101
+    make wifi-provision PORT=/dev/cu.usbmodem1101 SSID='my-network'
+
+The password is prompted without echo and stored in encrypted NVS. The first
+provisioning permanently reserves eFuse key block 0 for its encryption key.
+
+### 3. Build and flash VBAN-Key
 
     make set-target
     make build
-    make flash
+    make flash PORT=/dev/cu.usbmodem1101
 
-## Provision Wi-Fi
+`make flash` also opens the serial monitor. Exit with `Ctrl+]`.
 
-The SSID is selected in `config/device/config.toml`; its matching password is stored
-separately in encrypted NVS.
+## Contributing
 
-Activate ESP-IDF and verify that eFuse key block 0 is unused:
+### Layout
 
-    get_idf
-    espefuse.py -p PORT summary
+- `components/` — portable C99 application components and their tests
+- `main/` — ESP32 application entry point and platform implementation
+- `config/examples/` — tracked configuration examples
+- `config/device/` — ignored configuration embedded in the device firmware
+- `device_test/` — hardware-test firmware
+- `device_tools/` and `tools/` — device and host provisioning tools
+- `host/` and `host_test/` — simulator and host test applications
+- `doc/assets/` — documentation media
+- `third_party/` — vendored dependencies
 
-Then provision the credential:
+### Tests
 
-    make wifi-provision-build
-    make wifi-provision-flash PORT=/dev/cu.usbmodem101
-    make wifi-provision PORT=/dev/cu.usbmodem101 SSID='my-network'
+Native tests need CMake, Ninja, and a C compiler. ESP-IDF is not required.
 
-The password is prompted without echo. First-time provisioning permanently
-reserves eFuse key block 0 for NVS encryption. When complete, flash the normal
-firmware with `make flash`.
-
-`make set-target` creates a fresh generated ESP-IDF configuration from
-`sdkconfig.defaults`. Run it for a new build directory and rerun it whenever
-`sdkconfig.defaults` changes; `make build` preserves an existing generated
-configuration and does not apply changed defaults over previously selected
-values.
-
-## Test (host)
-
-    make host        # native Unity suites (CMake + Ninja + CTest)
-    make host-idf    # the same suites, compiled and run through ESP-IDF's Linux target
-
-`make test` is an alias for `make host`.
-
-## Lint (device)
-
-Activate ESP-IDF and use its Clang toolchain for ESP32-C3-specific code:
-
-    . ~/esp/esp-idf/export.sh
-    IDF_TOOLCHAIN=clang idf.py -B build/idf-clang \
-      -D SDKCONFIG=build/idf-clang/sdkconfig clang-check --exit-code
-
-## Simulator (host)
-
+    make host
     make sim
     make demo
 
-## TODO
+The ESP-IDF Linux test build requires an active ESP-IDF environment:
 
-- **Continuous integration** — GitHub Actions running the build + test lanes (native host, ESP-IDF Linux, firmware, on-chip build) on every push.
-- **On-chip real-world test** — flash an ESP32-C3 and validate end-to-end against a live Voicemeeter instance.
-- **Wiki** — illustrated guide and step-by-step instructions to build a VBAN keypad (wiring, enclosure, flashing, configuration).
+    make host-idf
+
+### Lint
+
+Install ESP-IDF's Clang tools, reactivate its environment, then run:
+
+    ./tools/idf_tools.py install esp-clang esp-clang-libs
+    . ~/esp/esp-idf/export.sh
+
+    IDF_TOOLCHAIN=clang idf.py -B build/idf-clang \
+      -D SDKCONFIG=build/idf-clang/sdkconfig clang-check --exit-code
+
+GitHub Actions also builds and tests the project with GCC, Clang, ESP-IDF Linux,
+and ESP32-C3 toolchains.
+
+Third-party licenses and attribution are listed in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

@@ -55,11 +55,8 @@ id      = 1
 type    = "latch"                    # latch = toggle per press | momentary = on while held
 gpi_pin = 4                          # ESP32-C3: avoid 12-17 (flash), 18/19 (USB), 2/8/9 (strapping)
 on = '''
-SendText("vban1",
-  Strip(0).mute = 1;
-  Strip(1).mute = 1;
-);
-Wait(200);
+SendText("vban1", Strip(0).mute = 1;);
+Wait(500);
 SendMidi("vban1", "note-on", 1, 60, 127);
 '''
 off = '''SendText("vban1", Strip(0).mute = 0;);'''
