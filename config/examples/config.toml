@@ -6,9 +6,17 @@
 
 
 [wifi]
-# Access point (network) to join in station mode. Stored in plaintext on flash.
-ssid     = "my-network"
-password = "change-me"               # leave empty for an open network
+# Access point to join in station mode. Its matching credential pair is stored
+# separately in NVS; plaintext passwords are rejected here.
+ssid = "my-network"
+dhcp = true
+
+# For a static device address, set dhcp = false and provide all three fields.
+# dns_server is optional.
+# ip_address = "192.168.1.40"
+# netmask = "255.255.255.0"
+# gateway = "192.168.1.1"
+# dns_server = "192.168.1.1"
 
 
 [global]

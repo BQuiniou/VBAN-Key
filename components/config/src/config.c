@@ -56,6 +56,45 @@ static int get_optional_int(toml_datum_t table, char const* key, int64_t* value)
     return CONFIG_OK;
 }
 
+static int get_optional_bool(toml_datum_t table, char const* key, bool default_value, bool* value)
+{
+    toml_datum_t const datum = toml_get(table, key);
+
+    if (datum.type == TOML_UNKNOWN)
+    {
+        *value = default_value;
+        return CONFIG_OK;
+    }
+    if (datum.type != TOML_BOOLEAN)
+    {
+        return CONFIG_ERR_SCHEMA;
+    }
+    *value = datum.u.boolean;
+    return CONFIG_OK;
+}
+
+static int map_wifi(toml_datum_t wifi, struct config* cfg)
+{
+    toml_datum_t const plaintext_password = toml_get(wifi, "password");
+
+    if (plaintext_password.type != TOML_UNKNOWN ||
+        get_optional_string(wifi, "ssid", &cfg->wifi_ssid) != CONFIG_OK ||
+        get_optional_bool(wifi, "dhcp", true, &cfg->wifi_dhcp) != CONFIG_OK ||
+        get_optional_string(wifi, "ip_address", &cfg->wifi_ip) != CONFIG_OK ||
+        get_optional_string(wifi, "netmask", &cfg->wifi_netmask) != CONFIG_OK ||
+        get_optional_string(wifi, "gateway", &cfg->wifi_gateway) != CONFIG_OK ||
+        get_optional_string(wifi, "dns_server", &cfg->wifi_dns) != CONFIG_OK)
+    {
+        return CONFIG_ERR_SCHEMA;
+    }
+    if (!cfg->wifi_dhcp &&
+        (cfg->wifi_ip == NULL || cfg->wifi_netmask == NULL || cfg->wifi_gateway == NULL))
+    {
+        return CONFIG_ERR_SCHEMA;
+    }
+    return CONFIG_OK;
+}
+
 static int map_log_level(toml_datum_t global, enum log_level* level)
 {
     toml_datum_t const datum = toml_get(global, "log_level");
@@ -230,10 +269,10 @@ static int map_config(struct config* cfg)
     int result;
 
     cfg->log_level = LOG_INFO;
+    cfg->wifi_dhcp = true;
     if (wifi.type != TOML_UNKNOWN)
     {
-        if (wifi.type != TOML_TABLE || get_optional_string(wifi, "ssid", &cfg->wifi_ssid) != CONFIG_OK ||
-            get_optional_string(wifi, "password", &cfg->wifi_password) != CONFIG_OK)
+        if (wifi.type != TOML_TABLE || map_wifi(wifi, cfg) != CONFIG_OK)
         {
             return CONFIG_ERR_SCHEMA;
         }

@@ -19,7 +19,10 @@ UDP commands (TEXT / MIDI) to Voicemeeter peers on key-press / GPI events.
   - `vban_net/` — VBAN packet assembly + UDP send (shared host / ESP-IDF)
   - `tomlc17/` — vendored TOML parser (third party)
 - `main/` — app entry + the ESP-IDF platform shim (`platform/`)
-- `data/` — runtime config flashed to the LittleFS `storage` partition
+- `config/examples/` — tracked generic configuration examples
+- `config/device/` — ignored device configuration flashed to LittleFS
+- `device_tools/` — auxiliary firmware used for device setup and maintenance
+- `tools/` — host-side setup utilities
 - `host/` — standalone native build (Ninja), with the Unity shim (`host/unity_shim/`)
   and interactive simulator (`host/sim/`)
 - `components/<comp>/test/` — component Unity tests
@@ -66,9 +69,38 @@ formatting/linting so it stays byte-for-byte upstream.
 
 ## Build (device)
 
+Create the ignored device-local configuration and select its Wi-Fi SSID:
+
+    mkdir -p config/device
+    cp config/examples/config.toml config/device/config.toml
+    $EDITOR config/device/config.toml
+
+Do not put the Wi-Fi password in this file; provision it separately as described
+below.
+
     make set-target
     make build
     make flash
+
+## Provision Wi-Fi
+
+The SSID is selected in `config/device/config.toml`; its matching password is stored
+separately in encrypted NVS.
+
+Activate ESP-IDF and verify that eFuse key block 0 is unused:
+
+    get_idf
+    espefuse.py -p PORT summary
+
+Then provision the credential:
+
+    make wifi-provision-build
+    make wifi-provision-flash PORT=/dev/cu.usbmodem101
+    make wifi-provision PORT=/dev/cu.usbmodem101 SSID='my-network'
+
+The password is prompted without echo. First-time provisioning permanently
+reserves eFuse key block 0 for NVS encryption. When complete, flash the normal
+firmware with `make flash`.
 
 `make set-target` creates a fresh generated ESP-IDF configuration from
 `sdkconfig.defaults`. Run it for a new build directory and rerun it whenever

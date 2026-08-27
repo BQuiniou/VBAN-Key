@@ -4,8 +4,19 @@
 #ifndef PLAT_NET_H
 #define PLAT_NET_H
 
-// ESP-IDF Wi-Fi + UDP shim: bring up station mode and send datagrams.
-// TODO: udp_send(peer, buf, len) once the config/peer model exists.
-void plat_net_init(void);
+#include "config/config.h"
+#include "vban_net/vban_net.h"
+
+#include <stdbool.h>
+
+/**
+ * Connect to the configured Wi-Fi network and open the VBAN UDP socket.
+ *
+ * The SSID comes from config.toml. Its matching password is loaded from
+ * encrypted NVS and is passed to the Wi-Fi driver using RAM-only storage.
+ * This function waits until the station obtains an address or exhausts its
+ * connection retries.
+ */
+bool plat_net_init(const struct config* cfg, struct vban_net* net);
 
 #endif // PLAT_NET_H
