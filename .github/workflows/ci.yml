@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host-tests:
+    name: Host tests (${{ matrix.compiler.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - name: GCC
+            cc: gcc
+          - name: Clang
+            cc: clang
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install --yes ninja-build
+
+      - name: Build and test portable code
+        env:
+          CC: ${{ matrix.compiler.cc }}
+        run: make host BUILD_HOST=build/ci-${{ matrix.compiler.cc }}
+
+  idf-linux-tests:
+    name: ESP-IDF Linux tests
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.4
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Build and run tests through ESP-IDF
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          make host-idf
+
+  esp32c3-builds:
+    name: ESP32-C3 builds
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.4
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Create placeholder device configuration
+        run: |
+          mkdir -p config/device
+          cp config/examples/config.toml config/device/config.toml
+
+      - name: Build main firmware
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          make set-target
+          make build
+
+      - name: Report main firmware size
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py -B build/idf-esp32c3 \
+            -D SDKCONFIG=build/idf-esp32c3/sdkconfig size
+
+      - name: Build Wi-Fi provisioning firmware
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          make wifi-provision-build
+
+      - name: Build GPIO diagnostic firmware
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          make gpio-test-build
