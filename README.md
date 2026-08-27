@@ -121,5 +121,13 @@ Install ESP-IDF's Clang tools, reactivate its environment, then run:
 GitHub Actions also builds and tests the project with GCC, Clang, ESP-IDF Linux,
 and ESP32-C3 toolchains.
 
+### Releases
+
+Releases follow Semantic Versioning and use signed annotated tags named
+`vMAJOR.MINOR.PATCH`. ESP-IDF derives the firmware version from the Git tag.
+The version in `config.toml` independently identifies the configuration format.
+Releases do not include firmware binaries because they embed device-specific
+configuration.
+
 Third-party licenses and attribution are listed in
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
