@@ -21,7 +21,7 @@ Activate ESP-IDF in every shell used for device commands:
 
     . ~/esp/esp-idf/export.sh
 
-See [Building a prototype](https://github.com/BQuiniou/VBAN-Key/wiki/Building-a-prototype)
+See [Building a prototype](https://github.com/BQuiniou/VBAN-Key/wiki#building-a-prototype)
 for the parts and wiring.
 
 ### Find the serial port
