@@ -52,10 +52,18 @@ Press each switch and check its state in the monitor. Exit with `Ctrl+]`.
 
 ### 2. Configure and provision Wi-Fi
 
-Create the device configuration:
+Create the device configuration from one of the tracked examples:
+
+- `config/examples/voicemeter-2buttons.toml` — commented reference of every
+  configuration key: two buttons, one latch and one momentary, text and MIDI
+  streams
+- `config/examples/voicemeter-4mutes.toml` — four buttons on GPIO4..GPIO7
+  toggling VoiceMeeter strip mute, including a two-second unmute burst
+
+Copy one of them and edit it:
 
     mkdir -p config/device
-    cp config/examples/config.toml config/device/config.toml
+    cp config/examples/voicemeter-2buttons.toml config/device/config.toml
     $EDITOR config/device/config.toml
 
 Set the Wi-Fi SSID, network settings, destination, buttons, and commands. Do not

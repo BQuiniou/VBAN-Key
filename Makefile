@@ -28,14 +28,26 @@ IDF_PYTHON      = $(IDF_PYTHON_ENV_PATH)/bin/python
 # firmware (esp32c3) and the Linux host-test target coexist in parallel trees
 # and never need a `set-target` flip. The esp32c3 target is read from
 # sdkconfig.defaults; the Linux target is selected explicitly (see host-idf).
-IDF_C3 = $(IDF) -B $(BUILD_IDF) -D SDKCONFIG=$(BUILD_IDF)/sdkconfig
+#
+# The sdkconfig is a generated file: `reconfigure` deletes it so the committed
+# sdkconfig.defaults is reapplied in full. ESP-IDF only fills in settings an
+# existing sdkconfig does not already carry, so a stale one silently outranks
+# the defaults.
+SDKCONFIG_C3             = $(BUILD_IDF)/sdkconfig
+SDKCONFIG_GPIO_TEST      = $(CURDIR)/$(BUILD_GPIO_TEST)/sdkconfig
+SDKCONFIG_WIFI_PROVISION = $(CURDIR)/$(BUILD_WIFI_PROVISION)/sdkconfig
+
+IDF_C3 = $(IDF) -B $(BUILD_IDF) -D SDKCONFIG=$(SDKCONFIG_C3)
 IDF_GPIO_TEST = $(IDF) -C device_test/gpio -B $(CURDIR)/$(BUILD_GPIO_TEST) \
-	-D SDKCONFIG=$(CURDIR)/$(BUILD_GPIO_TEST)/sdkconfig
+	-D SDKCONFIG=$(SDKCONFIG_GPIO_TEST)
+# The provisioning tool shares the firmware's flash layout and NVS scheme, so it
+# reads the root sdkconfig.defaults first and overrides only what differs.
 IDF_WIFI_PROVISION = $(IDF) -C device_tools/wifi_provision \
 	-B $(CURDIR)/$(BUILD_WIFI_PROVISION) \
-	-D SDKCONFIG=$(CURDIR)/$(BUILD_WIFI_PROVISION)/sdkconfig
+	-D SDKCONFIG=$(SDKCONFIG_WIFI_PROVISION) \
+	-D SDKCONFIG_DEFAULTS="$(CURDIR)/sdkconfig.defaults;$(CURDIR)/device_tools/wifi_provision/sdkconfig.defaults"
 
-.PHONY: help check-idf host test sim demo build flash monitor menuconfig set-target reconfigure host-idf gpio-test-build gpio-test-flash gpio-test-monitor wifi-provision-build wifi-provision-flash wifi-provision clean
+.PHONY: help check-idf host test sim demo build flash monitor menuconfig set-target reconfigure host-idf gpio-test-reconfigure gpio-test-build gpio-test-flash gpio-test-monitor wifi-provision-reconfigure wifi-provision-build wifi-provision-flash wifi-provision clean
 
 help: ## Show available targets
 	@grep '^[a-zA-Z_-][a-zA-Z_-]*:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -63,9 +75,9 @@ sim: ## Configure if needed and build the simulator
 	@echo "Run $(BUILD_HOST)/vbankey-sim"
 
 demo: sim ## Build and run the simulator demo
-	$(BUILD_HOST)/vbankey-sim --demo
+	$(BUILD_HOST)/vbankey-sim config/examples/voicemeter-2buttons.toml --demo
 
-build: check-idf ## Build the ESP-IDF firmware (build/idf-esp32c3)
+build: reconfigure ## Build the ESP-IDF firmware (build/idf-esp32c3)
 	$(IDF_C3) build
 
 flash: check-idf ## Flash the firmware and open the monitor
@@ -80,7 +92,8 @@ menuconfig: check-idf ## Open the ESP-IDF configuration menu
 set-target: check-idf ## (Re)initialise the esp32c3 firmware build dir
 	$(IDF_C3) set-target esp32c3
 
-reconfigure: check-idf ## Reconfigure the ESP-IDF firmware project
+reconfigure: check-idf ## Regenerate sdkconfig from sdkconfig.defaults and reconfigure
+	rm -f $(SDKCONFIG_C3)
 	$(IDF_C3) reconfigure
 
 host-idf: check-idf ## Build + run all component tests via the ESP-IDF Linux target (build/idf-linux)
@@ -88,7 +101,11 @@ host-idf: check-idf ## Build + run all component tests via the ESP-IDF Linux tar
 	    -D SDKCONFIG=$(CURDIR)/$(BUILD_IDF_LINUX)/sdkconfig --preview set-target linux build
 	$(CURDIR)/$(BUILD_IDF_LINUX)/vbankey_host_test.elf
 
-gpio-test-build: check-idf ## Build the ESP32-C3 GPI hardware-test application
+gpio-test-reconfigure: check-idf ## Regenerate the GPI hardware-test sdkconfig and reconfigure
+	rm -f $(SDKCONFIG_GPIO_TEST)
+	$(IDF_GPIO_TEST) reconfigure
+
+gpio-test-build: gpio-test-reconfigure ## Build the ESP32-C3 GPI hardware-test application
 	$(IDF_GPIO_TEST) build
 
 gpio-test-flash: check-idf ## Flash the GPI hardware-test application
@@ -97,7 +114,11 @@ gpio-test-flash: check-idf ## Flash the GPI hardware-test application
 gpio-test-monitor: check-idf ## Open the GPI hardware-test serial monitor
 	$(IDF_GPIO_TEST) $(if $(PORT),-p $(PORT),) monitor
 
-wifi-provision-build: check-idf ## Build the Wi-Fi provisioning firmware
+wifi-provision-reconfigure: check-idf ## Regenerate the provisioning sdkconfig and reconfigure
+	rm -f $(SDKCONFIG_WIFI_PROVISION)
+	$(IDF_WIFI_PROVISION) reconfigure
+
+wifi-provision-build: wifi-provision-reconfigure ## Build the Wi-Fi provisioning firmware
 	$(IDF_WIFI_PROVISION) build
 
 wifi-provision-flash: check-idf ## Flash the Wi-Fi provisioning firmware

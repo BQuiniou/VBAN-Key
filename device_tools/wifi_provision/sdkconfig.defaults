@@ -1,17 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Benoit Quiniou
 # SPDX-License-Identifier: MIT
 
-CONFIG_IDF_TARGET="esp32c3"
-
-# Use native USB for the provisioning console.
-CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
-CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
-
-# Use the main firmware's partition layout and encrypted-NVS scheme.
-CONFIG_PARTITION_TABLE_CUSTOM=y
+# Applied on top of the firmware's ../../sdkconfig.defaults (see the Makefile),
+# which is the single source of truth for the target, console, flash size and
+# encrypted-NVS scheme. Only the path to the shared partition table differs, as
+# it is resolved relative to this project directory.
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="../../partitions.csv"
-CONFIG_NVS_ENCRYPTION=y
-CONFIG_NVS_SEC_KEY_PROTECT_USING_HMAC=y
-CONFIG_NVS_SEC_HMAC_EFUSE_KEY_ID=0
-
-CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y

@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: 2026 Benoit Quiniou
+# SPDX-License-Identifier: MIT
+
+# Four buttons on GPIO4..GPIO7 driving mute on a remote VoiceMeeter:
+# Strip(0) and Strip(1) latched, Bus(0) push-to-talk, Bus(1) on a 2 s burst.
+
+
+[wifi]
+ssid = "my-network"
+dhcp = true
+
+
+[global]
+version   = "1.0.0"
+log_level = "info"
+
+default_ip_address = "192.168.1.57"  # VoiceMeeter host
+default_port       = 6980
+
+
+[[text]]
+id          = 1
+stream_name = "Command1"
+
+
+# BUTTONS
+
+# Latch: press unmutes Strip 0, next press mutes it.
+[[button]]
+id      = 1
+type    = "latch"
+gpi_pin = 4
+on  = '''SendText("vban1", Strip(0).mute = 0;);'''
+off = '''SendText("vban1", Strip(0).mute = 1;);'''
+
+# Latch: press unmutes Strip 1, next press mutes it.
+[[button]]
+id      = 2
+type    = "latch"
+gpi_pin = 5
+on  = '''SendText("vban1", Strip(1).mute = 0;);'''
+off = '''SendText("vban1", Strip(1).mute = 1;);'''
+
+# Momentary push-to-talk: Bus(0) unmuted while held.
+[[button]]
+id      = 3
+type    = "momentary"
+gpi_pin = 6
+on  = '''SendText("vban1", Bus(0).mute = 0;);'''
+off = '''SendText("vban1", Bus(0).mute = 1;);'''
+
+# 2 s burst on Bus(1): every press unmutes, waits 2 s, mutes. Release does
+# nothing — a latch emits no event on release, so the Wait is never cancelled.
+[[button]]
+id      = 4
+type    = "latch"
+gpi_pin = 7
+on = '''
+SendText("vban1", Bus(1).mute = 0;);
+Wait(2000);
+SendText("vban1", Bus(1).mute = 1;);
+'''
+off = '''
+SendText("vban1", Bus(1).mute = 0;);
+Wait(2000);
+SendText("vban1", Bus(1).mute = 1;);
+'''

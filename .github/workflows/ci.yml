@@ -74,7 +74,7 @@ jobs:
       - name: Create placeholder device configuration
         run: |
           mkdir -p config/device
-          cp config/examples/config.toml config/device/config.toml
+          cp config/examples/voicemeter-2buttons.toml config/device/config.toml
 
       - name: Build main firmware
         shell: bash
