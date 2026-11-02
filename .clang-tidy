@@ -57,3 +57,5 @@ WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 ExcludeHeaderFilterRegex: 'tomlc17|unity'   # never lint vendored headers (tomlc17, Unity)
 FormatStyle:      file
+CheckOptions:
+  misc-header-include-cycle.IgnoredFilesList: 'FreeRTOS.h;idf_additions.h'

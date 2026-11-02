@@ -100,7 +100,7 @@ static void send_vban(int sock, uint16_t port, uint8_t format_sr, char const* na
 
     TEST_ASSERT_EQUAL_INT(VBAN_OK, vban_build_text_header((struct vban_header*) packet, name, strlen(name), 0U));
     ((struct vban_header*) packet)->format_SR = format_sr;
-    memcpy(packet + VBAN_HEADER_SIZE, payload, length);
+    memcpy(packet + VBAN_HEADER_SIZE, payload, length + 1U);
     target.sin_family = AF_INET;
     target.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     target.sin_port = htons(port);

@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 # GPO 1 follows button 1; GPO 2 follows "GPO[2] = 0|1;" received on the GPO1 TEXT stream.
+# Every GPO starts off at boot. Each write is logged as "GPO <id> WRITE HIGH|LOW (GPIO<n>)".
+# Wiring LEDs and relays: https://github.com/BQuiniou/VBAN-Key/wiki#wire-outputs
 
 
 [wifi]
@@ -17,10 +19,18 @@ default_ip_address = "192.168.1.255"
 default_port       = 6980
 
 
+# INCOMING TEXT — every "GPO[<id>] = 1;" or "GPO[<id>] = 0;" statement in a
+# packet received on this stream drives [[gpo]] <id>; other statements are ignored.
+# Another board's button can send them with SendText("vbanN", GPO[2] = 1;).
 [[text_in]]
 stream_name = "GPO1"
+# port       = 6980                  # optional, defaults to default_port
+# ip_address = "192.168.1.57"        # optional, accepted sender; any sender if absent
 
 
+# OUTPUTS — a pin is either a gpi_pin or a gpo_pin, never both.
+# ESP32-C3: GPO refused on 2, 8, 9 and 11-19. A pin supplies at most 40 mA:
+# drive a relay coil through a transistor.
 [[gpo]]
 id      = 1
 gpo_pin = 6
@@ -28,9 +38,10 @@ gpo_pin = 6
 [[gpo]]
 id         = 2
 gpo_pin    = 7
-active_low = false
+active_low = false                   # true: the pin is driven LOW when the output is on
 
 
+# BUTTONS — gpo = <id> turns that output on and off with the button state.
 [[button]]
 id      = 1
 type    = "latch"

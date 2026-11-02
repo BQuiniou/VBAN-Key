@@ -93,46 +93,6 @@ provisioning permanently reserves eFuse key block 0 for its encryption key.
 
 `make flash` also opens the serial monitor. Exit with `Ctrl+]`.
 
-### Outputs (GPO)
-
-Each `[[gpo]]` block declares an output pin:
-
-    [[gpo]]
-    id         = 1
-    gpo_pin    = 10
-    active_low = false   # true: the pin is driven LOW when the output is on
-
-Every output starts off at boot. It is then driven by either source:
-
-- A button: `gpo = <id>` in a `[[button]]` block turns the output on and off
-  with the button state.
-- The network: a `[[text_in]]` block accepts VBAN TEXT packets on a stream
-  name, and every `GPO[<id>] = 1;` or `GPO[<id>] = 0;` statement in their
-  payload drives that output. Other statements are ignored.
-
-      [[text_in]]
-      stream_name = "GPO1"
-      port        = 6980            # optional, defaults to default_port
-      ip_address  = "192.168.1.57"  # optional, accepted sender
-
-A button script can drive another board's outputs with
-`SendText("vban1", GPO[2] = 1;)`. A pin is used by at most one `gpi_pin` or
-`gpo_pin`; the firmware refuses GPO on `GPIO2`, `GPIO8`, `GPIO9`, and
-`GPIO11`–`GPIO19`. Every GPO write is logged as `GPO <id> WRITE HIGH|LOW
-(GPIO<n>)`. An output pin supplies at most 40 mA: drive anything larger than an
-LED, such as a relay coil, through a transistor. See
-[Wiring outputs](https://github.com/BQuiniou/VBAN-Key/wiki#wire-outputs).
-
-### Configuration format
-
-`[global] version` identifies the configuration format. This firmware reads
-versions `1.x.y` and `2.x.y`; a file without `version` is version 1, and any
-other major version is refused. Version 2 renamed `[[text]]` and `[[midi]]` to
-`[[text_out]]` and `[[midi_out]]`, and added `[[text_in]]`, `[[gpo]]`, and the
-`[[button]]` `gpo` key. Version 1 files load unchanged, with their `[[text]]`
-and `[[midi]]` sections converted; each format refuses the other's section
-names.
-
 ## Contributing
 
 ### Layout
@@ -161,22 +121,29 @@ The ESP-IDF Linux test build requires an active ESP-IDF environment:
 
 ### Lint
 
-Install ESP-IDF's Clang tools, reactivate its environment, then run:
+Check formatting and run clang-tidy on the portable and simulator sources with
+`clang-format` and `clang-tidy` on the `PATH` (CI pins `clang-format==23.1.3`
+and `clang-tidy==23.1.4` from PyPI):
 
-    ./tools/idf_tools.py install esp-clang esp-clang-libs
+    make format-check
+    make tidy
+
+The ESP-only sources (`main/`, `device_tools/`, `device_test/`) need ESP-IDF's
+Clang toolchain. Install it, reactivate the environment, then run:
+
+    $IDF_PATH/tools/idf_tools.py install esp-clang
     . ~/esp/esp-idf/export.sh
+    make tidy-idf
 
-    IDF_TOOLCHAIN=clang idf.py -B build/idf-clang \
-      -D SDKCONFIG=build/idf-clang/sdkconfig clang-check --exit-code
-
-GitHub Actions also builds and tests the project with GCC, Clang, ESP-IDF Linux,
-and ESP32-C3 toolchains.
+GitHub Actions runs all three, and also builds and tests the project with GCC,
+Clang, ESP-IDF Linux, and ESP32-C3 toolchains.
 
 ### Releases
 
 Releases follow Semantic Versioning and use signed annotated tags named
 `vMAJOR.MINOR.PATCH`. ESP-IDF derives the firmware version from the Git tag.
-The version in `config.toml` independently identifies the configuration format.
+The version in `config.toml` independently identifies the configuration format;
+the firmware reads formats 1 and 2, converting format 1 files as it loads them.
 Releases do not include firmware binaries because they embed device-specific
 configuration.
 

@@ -47,7 +47,15 @@ IDF_WIFI_PROVISION = $(IDF) -C device_tools/wifi_provision \
 	-D SDKCONFIG=$(SDKCONFIG_WIFI_PROVISION) \
 	-D SDKCONFIG_DEFAULTS="$(CURDIR)/sdkconfig.defaults;$(CURDIR)/device_tools/wifi_provision/sdkconfig.defaults"
 
-.PHONY: help check-idf host test sim demo build flash monitor menuconfig set-target reconfigure host-idf gpio-test-reconfigure gpio-test-build gpio-test-flash gpio-test-monitor wifi-provision-reconfigure wifi-provision-build wifi-provision-flash wifi-provision clean
+CLANG_FORMAT      ?= clang-format
+CLANG_TIDY        ?= clang-tidy
+BUILD_TIDY_IDF    ?= build/idf-tidy
+TIDY_FLAGS         = --quiet --warnings-as-errors='*' --header-filter='$(CURDIR)/(components|host|main|device_tools|device_test)/'
+LINT_SOURCES       = $(shell git ls-files '*.c' '*.h' | grep -v -e '^components/tomlc17/' -e '^third_party/')
+HOST_TIDY_SOURCES  = $(shell git ls-files 'components/*.c' 'host/sim/*.c' | grep -v '^components/tomlc17/')
+IDF_TIDY           = IDF_TOOLCHAIN=clang $(IDF)
+
+.PHONY: help check-idf format-check tidy tidy-idf host test sim demo build flash monitor menuconfig set-target reconfigure host-idf gpio-test-reconfigure gpio-test-build gpio-test-flash gpio-test-monitor wifi-provision-reconfigure wifi-provision-build wifi-provision-flash wifi-provision clean
 
 help: ## Show available targets
 	@grep '^[a-zA-Z_-][a-zA-Z_-]*:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -61,6 +69,25 @@ check-idf:
 	    echo "ESP-IDF Python environment is unavailable: $(IDF_PYTHON)"; \
 	    exit 2; \
 	}
+
+format-check: ## Check every tracked C source against .clang-format
+	$(CLANG_FORMAT) --dry-run --Werror $(LINT_SOURCES)
+
+tidy: ## Run clang-tidy on the sources of the native host build
+	cmake -S host -B $(BUILD_HOST) -G "$(GENERATOR)"
+	$(CLANG_TIDY) -p $(BUILD_HOST) $(TIDY_FLAGS) $(HOST_TIDY_SOURCES)
+
+tidy-idf: check-idf ## Run ESP-IDF's clang-tidy on the ESP-only sources (needs esp-clang)
+	$(IDF_TIDY) -B $(BUILD_TIDY_IDF)/main -D SDKCONFIG=$(BUILD_TIDY_IDF)/main/sdkconfig reconfigure
+	$(CLANG_TIDY) -p $(BUILD_TIDY_IDF)/main $(TIDY_FLAGS) $(shell git ls-files 'main/*.c')
+	$(IDF_TIDY) -C device_tools/wifi_provision -B $(CURDIR)/$(BUILD_TIDY_IDF)/wifi_provision \
+	    -D SDKCONFIG=$(CURDIR)/$(BUILD_TIDY_IDF)/wifi_provision/sdkconfig \
+	    -D SDKCONFIG_DEFAULTS="$(CURDIR)/sdkconfig.defaults;$(CURDIR)/device_tools/wifi_provision/sdkconfig.defaults" \
+	    reconfigure
+	$(CLANG_TIDY) -p $(BUILD_TIDY_IDF)/wifi_provision $(TIDY_FLAGS) $(shell git ls-files 'device_tools/*.c')
+	$(IDF_TIDY) -C device_test/gpio -B $(CURDIR)/$(BUILD_TIDY_IDF)/gpio \
+	    -D SDKCONFIG=$(CURDIR)/$(BUILD_TIDY_IDF)/gpio/sdkconfig reconfigure
+	$(CLANG_TIDY) -p $(BUILD_TIDY_IDF)/gpio $(TIDY_FLAGS) $(shell git ls-files 'device_test/*.c')
 
 host: ## Configure, build, and test the native host targets (build/macos|build/linux by OS)
 	cmake -S host -B $(BUILD_HOST) -G "$(GENERATOR)"
