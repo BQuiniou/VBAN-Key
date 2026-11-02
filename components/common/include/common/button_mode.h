@@ -7,7 +7,7 @@
 enum button_mode
 {
     BUTTON_MOMENTARY,
-    BUTTON_LATCH
+    BUTTON_LATCH,
 };
 
 #endif // VBANKEY_BUTTON_MODE_H

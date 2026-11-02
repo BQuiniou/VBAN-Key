@@ -9,19 +9,18 @@
 
 [wifi]
 ssid     = "my-network"
-password = "change-me"
 
 [global]
-version            = "1.0.0"
+version            = "2.0.0"
 log_level          = "info"
 default_ip_address = "192.168.1.255" # subnet broadcast
 default_port       = 6980
 
-[[text]]
+[[text_out]]
 id          = 1
 stream_name = "Command1"
 
-[[midi]]
+[[midi_out]]
 id          = 1
 stream_name = "MIDI1"
 

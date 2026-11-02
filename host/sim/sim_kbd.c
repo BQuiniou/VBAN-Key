@@ -20,7 +20,13 @@ static bool real_events;
 static bool registered_cleanup;
 static char escape_body[ESCAPE_CAPACITY];
 static size_t escape_length;
-static enum { INPUT_PLAIN, INPUT_ESCAPE, INPUT_CSI, INPUT_CSI_DROP } input_state;
+static enum
+{
+    INPUT_PLAIN,
+    INPUT_ESCAPE,
+    INPUT_CSI,
+    INPUT_CSI_DROP,
+} input_state;
 
 static bool parse_number(char const* seq, size_t end, size_t* index, int* value)
 {
@@ -101,7 +107,7 @@ static bool detect_protocol(void)
     {
         DETECT_PLAIN,
         DETECT_ESCAPE,
-        DETECT_CSI
+        DETECT_CSI,
     } state = DETECT_PLAIN;
     bool supported = false;
 
@@ -195,7 +201,7 @@ void sim_kbd_init(void)
     }
     has_saved = true;
     raw = saved_termios;
-    raw.c_lflag &= (tcflag_t) ~(ICANON | ECHO);
+    raw.c_lflag &= ~((tcflag_t) (ICANON | ECHO));
     raw.c_cc[VMIN] = 0;
     raw.c_cc[VTIME] = 0;
     (void) tcsetattr(STDIN_FILENO, TCSANOW, &raw);
@@ -269,7 +275,7 @@ static bool consume_byte(unsigned char byte, struct sim_kbd_event* out)
         {
             return false;
         }
-        if (event_type == 1 && (keycode == 3 || (keycode == 'c' && ((modifiers - 1) & 4) != 0)))
+        if (event_type == 1 && (keycode == 3 || (keycode == 'c' && (((unsigned int) modifiers - 1U) & 4U) != 0U)))
         {
             out->action = SIM_KBD_QUIT;
             out->key = keycode;

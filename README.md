@@ -2,7 +2,8 @@
 
 Firmware for an ESP32-C3 keypad that sends
 [VBAN](https://vb-audio.com/Voicemeeter/VBANProtocol_Specifications.pdf)
-TEXT and MIDI commands over Wi-Fi.
+TEXT and MIDI commands over Wi-Fi, and drives output pins (GPO) from buttons or
+from incoming VBAN TEXT commands.
 
 - Target: ESP32-C3 SuperMini
 - Framework: ESP-IDF 5.5.x, C99
@@ -59,6 +60,8 @@ Create the device configuration from one of the tracked examples:
   streams
 - `config/examples/voicemeter-4mutes.toml` — four buttons on GPIO4..GPIO7
   toggling VoiceMeeter strip mute, including a two-second unmute burst
+- `config/examples/gpo-button-and-remote.toml` — one output driven by a button
+  and one driven by incoming `GPO[n] = 0|1;` VBAN TEXT commands
 
 Copy one of them and edit it:
 
@@ -89,6 +92,46 @@ provisioning permanently reserves eFuse key block 0 for its encryption key.
     make flash PORT=/dev/cu.usbmodem1101
 
 `make flash` also opens the serial monitor. Exit with `Ctrl+]`.
+
+### Outputs (GPO)
+
+Each `[[gpo]]` block declares an output pin:
+
+    [[gpo]]
+    id         = 1
+    gpo_pin    = 10
+    active_low = false   # true: the pin is driven LOW when the output is on
+
+Every output starts off at boot. It is then driven by either source:
+
+- A button: `gpo = <id>` in a `[[button]]` block turns the output on and off
+  with the button state.
+- The network: a `[[text_in]]` block accepts VBAN TEXT packets on a stream
+  name, and every `GPO[<id>] = 1;` or `GPO[<id>] = 0;` statement in their
+  payload drives that output. Other statements are ignored.
+
+      [[text_in]]
+      stream_name = "GPO1"
+      port        = 6980            # optional, defaults to default_port
+      ip_address  = "192.168.1.57"  # optional, accepted sender
+
+A button script can drive another board's outputs with
+`SendText("vban1", GPO[2] = 1;)`. A pin is used by at most one `gpi_pin` or
+`gpo_pin`; the firmware refuses GPO on `GPIO2`, `GPIO8`, `GPIO9`, and
+`GPIO11`–`GPIO19`. Every GPO write is logged as `GPO <id> WRITE HIGH|LOW
+(GPIO<n>)`. An output pin supplies at most 40 mA: drive anything larger than an
+LED, such as a relay coil, through a transistor. See
+[Wiring outputs](https://github.com/BQuiniou/VBAN-Key/wiki#wire-outputs).
+
+### Configuration format
+
+`[global] version` identifies the configuration format. This firmware reads
+versions `1.x.y` and `2.x.y`; a file without `version` is version 1, and any
+other major version is refused. Version 2 renamed `[[text]]` and `[[midi]]` to
+`[[text_out]]` and `[[midi_out]]`, and added `[[text_in]]`, `[[gpo]]`, and the
+`[[button]]` `gpo` key. Version 1 files load unchanged, with their `[[text]]`
+and `[[midi]]` sections converted; each format refuses the other's section
+names.
 
 ## Contributing
 

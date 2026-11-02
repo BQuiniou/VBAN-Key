@@ -23,7 +23,7 @@ enum vs_cmd_type
 {
     VS_TEXT,
     VS_MIDI,
-    VS_WAIT
+    VS_WAIT,
 };
 
 enum vs_result
@@ -35,7 +35,7 @@ enum vs_result
     VS_ERR_RANGE,
     VS_ERR_TOO_MANY,
     VS_ERR_ARENA_FULL,
-    VS_ERR_TEXT_TOO_LONG
+    VS_ERR_TEXT_TOO_LONG,
 };
 
 struct vs_command
@@ -53,6 +53,19 @@ struct vs_script
 {
     struct vs_command cmd[VS_MAX_CMDS];
     size_t n;
+};
+
+#define VS_NO_INDEX (-1)
+
+struct vs_assignment
+{
+    char const* target;
+    size_t target_len;
+    int64_t index;
+    char const* field;
+    size_t field_len;
+    char const* value;
+    size_t value_len;
 };
 
 struct vs_ops
@@ -77,5 +90,9 @@ int vban_script_compile(
 
 /** Execute compiled commands in order through the injected operations. */
 void vban_script_run(const struct vs_script* s, const struct vs_ops* ops);
+
+int vban_script_parse_payload(
+    char const* payload, struct vs_assignment* out, size_t capacity, size_t* count, char* err, size_t err_len
+);
 
 #endif // VBANKEY_VBAN_SCRIPT_H

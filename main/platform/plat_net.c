@@ -33,8 +33,8 @@ static struct plat_net_state state;
 static bool parse_static_address(const struct config* cfg, esp_netif_ip_info_t* address)
 {
     return esp_netif_str_to_ip4(cfg->wifi_ip, &address->ip) == ESP_OK &&
-        esp_netif_str_to_ip4(cfg->wifi_netmask, &address->netmask) == ESP_OK &&
-        esp_netif_str_to_ip4(cfg->wifi_gateway, &address->gw) == ESP_OK;
+           esp_netif_str_to_ip4(cfg->wifi_netmask, &address->netmask) == ESP_OK &&
+           esp_netif_str_to_ip4(cfg->wifi_gateway, &address->gw) == ESP_OK;
 }
 
 static bool configure_static_address(void)
@@ -80,12 +80,7 @@ static bool configure_static_address(void)
     return true;
 }
 
-static void event_handler(
-    void* ctx,
-    esp_event_base_t event_base,
-    int32_t event_id,
-    void* event_data
-)
+static void event_handler(void* ctx, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
     (void) ctx;
 
@@ -154,8 +149,7 @@ static bool load_wifi_config(const struct config* cfg, wifi_config_t* wifi)
     }
 
     ssid_length = strlen(cfg->wifi_ssid);
-    if (ssid_length == 0U || ssid_length > sizeof wifi->sta.ssid ||
-        credentials.password_length > sizeof wifi->sta.password)
+    if (ssid_length == 0U || ssid_length > sizeof wifi->sta.ssid || credentials.password_length > sizeof wifi->sta.password)
     {
         plat_credentials_clear(&credentials);
         ESP_LOGE(TAG, "Wi-Fi credential exceeds ESP32-C3 limits");
@@ -164,13 +158,8 @@ static bool load_wifi_config(const struct config* cfg, wifi_config_t* wifi)
 
     (void) memset(wifi, 0, sizeof *wifi);
     (void) memcpy(wifi->sta.ssid, cfg->wifi_ssid, ssid_length);
-    (void) memcpy(
-        wifi->sta.password,
-        credentials.password,
-        credentials.password_length
-    );
-    wifi->sta.threshold.authmode =
-        credentials.password_length == 0U ? WIFI_AUTH_OPEN : WIFI_AUTH_WPA2_PSK;
+    (void) memcpy(wifi->sta.password, credentials.password, credentials.password_length);
+    wifi->sta.threshold.authmode = credentials.password_length == 0U ? WIFI_AUTH_OPEN : WIFI_AUTH_WPA2_PSK;
     wifi->sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
 
     plat_credentials_clear(&credentials);
@@ -239,25 +228,13 @@ bool plat_net_init(const struct config* cfg, struct vban_net* net)
         ESP_LOGE(TAG, "Cannot select RAM-only Wi-Fi storage: %s", esp_err_to_name(result));
         return false;
     }
-    result = esp_event_handler_instance_register(
-        WIFI_EVENT,
-        ESP_EVENT_ANY_ID,
-        event_handler,
-        NULL,
-        &wifi_handler
-    );
+    result = esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event_handler, NULL, &wifi_handler);
     if (result != ESP_OK)
     {
         ESP_LOGE(TAG, "Cannot register Wi-Fi event handler: %s", esp_err_to_name(result));
         return false;
     }
-    result = esp_event_handler_instance_register(
-        IP_EVENT,
-        IP_EVENT_STA_GOT_IP,
-        event_handler,
-        NULL,
-        &ip_handler
-    );
+    result = esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, event_handler, NULL, &ip_handler);
     if (result != ESP_OK)
     {
         ESP_LOGE(TAG, "Cannot register IP event handler: %s", esp_err_to_name(result));
@@ -280,13 +257,7 @@ bool plat_net_init(const struct config* cfg, struct vban_net* net)
     }
 
     ESP_LOGI(TAG, "Connecting to SSID \"%s\"", cfg->wifi_ssid);
-    bits = xEventGroupWaitBits(
-        state.events,
-        WIFI_CONNECTED_BIT | WIFI_FAILED_BIT,
-        pdFALSE,
-        pdFALSE,
-        portMAX_DELAY
-    );
+    bits = xEventGroupWaitBits(state.events, WIFI_CONNECTED_BIT | WIFI_FAILED_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
     if ((bits & WIFI_CONNECTED_BIT) == 0U)
     {
         ESP_LOGE(TAG, "Cannot connect to configured Wi-Fi network");

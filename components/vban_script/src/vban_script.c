@@ -182,8 +182,8 @@ static int resolve_stream(struct parser* parser, int text_stream, int id, char c
     size_t count;
     size_t index;
 
-    streams = text_stream != 0 ? parser->cfg->text : parser->cfg->midi;
-    count = text_stream != 0 ? parser->cfg->n_text : parser->cfg->n_midi;
+    streams = text_stream != 0 ? parser->cfg->text_out : parser->cfg->midi_out;
+    count = text_stream != 0 ? parser->cfg->n_text_out : parser->cfg->n_midi_out;
     for (index = 0U; index < count; ++index)
     {
         if (streams[index].id == id)
@@ -616,4 +616,150 @@ void vban_script_run(const struct vs_script* s, const struct vs_ops* ops)
             break;
         }
     }
+}
+
+static int is_field_end(char character)
+{
+    return character == '\0' || character == '=' || character == ';' || isspace((unsigned char) character) != 0;
+}
+
+static int parse_index(struct parser* parser, int64_t* index)
+{
+    char close;
+    int result;
+
+    *index = VS_NO_INDEX;
+    skip_space(parser);
+    if (*parser->pos != '[' && *parser->pos != '(')
+    {
+        return VS_OK;
+    }
+    close = *parser->pos == '[' ? ']' : ')';
+    ++parser->pos;
+    result = parse_integer(parser, index);
+    if (result != VS_OK)
+    {
+        return result;
+    }
+    if (*index < 0)
+    {
+        return fail_at(parser, VS_ERR_RANGE, parser->pos, "negative index");
+    }
+    return expect_char(parser, close, "expected closing index bracket");
+}
+
+static int parse_field(struct parser* parser, struct vs_assignment* assignment)
+{
+    assignment->field = NULL;
+    assignment->field_len = 0U;
+    skip_space(parser);
+    if (*parser->pos != '.')
+    {
+        return VS_OK;
+    }
+    ++parser->pos;
+    assignment->field = parser->pos;
+    while (is_field_end(*parser->pos) == 0)
+    {
+        ++parser->pos;
+    }
+    assignment->field_len = (size_t) (parser->pos - assignment->field);
+    if (assignment->field_len == 0U)
+    {
+        return fail_at(parser, VS_ERR_SYNTAX, parser->pos, "expected field name");
+    }
+    return VS_OK;
+}
+
+static int parse_value(struct parser* parser, struct vs_assignment* assignment)
+{
+    skip_space(parser);
+    if (*parser->pos == '"')
+    {
+        return parse_quoted(parser, &assignment->value, &assignment->value_len);
+    }
+    assignment->value = parser->pos;
+    while (is_field_end(*parser->pos) == 0)
+    {
+        ++parser->pos;
+    }
+    assignment->value_len = (size_t) (parser->pos - assignment->value);
+    if (assignment->value_len == 0U)
+    {
+        return fail_at(parser, VS_ERR_SYNTAX, parser->pos, "expected value");
+    }
+    return VS_OK;
+}
+
+static int parse_assignment(struct parser* parser, struct vs_assignment* assignment)
+{
+    int result;
+
+    assignment->target = parser->pos;
+    if (isalpha((unsigned char) *parser->pos) != 0)
+    {
+        while (isalnum((unsigned char) *parser->pos) != 0 || *parser->pos == '_')
+        {
+            ++parser->pos;
+        }
+    }
+    assignment->target_len = (size_t) (parser->pos - assignment->target);
+    if (assignment->target_len == 0U)
+    {
+        return fail_at(parser, VS_ERR_SYNTAX, parser->pos, "expected assignment target");
+    }
+    result = parse_index(parser, &assignment->index);
+    if (result == VS_OK)
+    {
+        result = parse_field(parser, assignment);
+    }
+    if (result == VS_OK)
+    {
+        result = expect_char(parser, '=', "expected '='");
+    }
+    if (result == VS_OK)
+    {
+        result = parse_value(parser, assignment);
+    }
+    parse_optional_semicolon(parser);
+    return result;
+}
+
+int vban_script_parse_payload(
+    char const* payload, struct vs_assignment* out, size_t capacity, size_t* count, char* err, size_t err_len
+)
+{
+    static char const empty_payload[] = "";
+    struct parser parser = {0};
+    int result;
+
+    if (err != NULL && err_len != 0U)
+    {
+        err[0] = '\0';
+    }
+    parser.base = payload != NULL ? payload : empty_payload;
+    parser.pos = parser.base;
+    parser.err = err;
+    parser.err_len = err_len;
+    if (out == NULL || count == NULL)
+    {
+        return fail_at(&parser, VS_ERR_SYNTAX, parser.pos, "output is NULL");
+    }
+    *count = 0U;
+    skip_between_statements(&parser);
+    while (*parser.pos != '\0')
+    {
+        if (*count == capacity)
+        {
+            return fail_at(&parser, VS_ERR_TOO_MANY, parser.pos, "too many assignments");
+        }
+        result = parse_assignment(&parser, &out[*count]);
+        if (result != VS_OK)
+        {
+            return result;
+        }
+        ++*count;
+        skip_between_statements(&parser);
+    }
+    return VS_OK;
 }

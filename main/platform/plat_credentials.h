@@ -38,10 +38,7 @@ bool plat_credentials_init(void);
  * NVS must already have been initialized. The stored SSID is deliberately
  * checked against the non-secret SSID selected by config.toml.
  */
-enum plat_credentials_result plat_credentials_load(
-    char const* expected_ssid,
-    struct plat_wifi_credentials* credentials
-);
+enum plat_credentials_result plat_credentials_load(char const* expected_ssid, struct plat_wifi_credentials* credentials);
 
 /**
  * Atomically store one SSID/password pair in the encrypted NVS namespace.

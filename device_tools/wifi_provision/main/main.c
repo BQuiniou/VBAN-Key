@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define COMMAND_CAPACITY 200U
+#define COMMAND_CAPACITY   200U
 #define WIFI_SSID_CAPACITY 33U
 
 static int hex_nibble(char value)
@@ -46,14 +46,13 @@ static bool decode_hex(char const* encoded, char* decoded, size_t capacity, size
     for (index = 0U; index < *decoded_length; ++index)
     {
         int const high = hex_nibble(encoded[index * 2U]);
-        int const low = hex_nibble(encoded[index * 2U + 1U]);
+        int const low = hex_nibble(encoded[(index * 2U) + 1U]);
 
         if (high < 0 || low < 0)
         {
             return false;
         }
-        decoded[index] =
-            (char) (((unsigned int) high << 4U) | (unsigned int) low);
+        decoded[index] = (char) (((unsigned int) high << 4U) | (unsigned int) low);
         if (decoded[index] == '\0')
         {
             return false;
@@ -65,7 +64,7 @@ static bool decode_hex(char const* encoded, char* decoded, size_t capacity, size
 
 static void clear_password(char* password, size_t capacity)
 {
-    volatile unsigned char* byte = (volatile unsigned char*) password;
+    unsigned char volatile* byte = (unsigned char volatile*) password;
     size_t index;
 
     for (index = 0U; index < capacity; ++index)
@@ -148,8 +147,7 @@ static void process_command(char* command)
     }
     else
     {
-        valid = valid &&
-            decode_hex(encoded_password, password, sizeof password, &password_length);
+        valid = valid && decode_hex(encoded_password, password, sizeof password, &password_length);
     }
 
     if (!valid || ssid_length == 0U || !valid_password_length(password_length))
@@ -173,8 +171,7 @@ static void process_command(char* command)
 void app_main(void)
 {
     char command[COMMAND_CAPACITY];
-    usb_serial_jtag_driver_config_t usb_config =
-        USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
+    usb_serial_jtag_driver_config_t usb_config = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
 
     if (usb_serial_jtag_driver_install(&usb_config) != ESP_OK)
     {

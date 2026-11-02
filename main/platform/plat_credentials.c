@@ -24,10 +24,7 @@ bool plat_credentials_init(void)
     return nvs_flash_init() == ESP_OK;
 }
 
-enum plat_credentials_result plat_credentials_load(
-    char const* expected_ssid,
-    struct plat_wifi_credentials* credentials
-)
+enum plat_credentials_result plat_credentials_load(char const* expected_ssid, struct plat_wifi_credentials* credentials)
 {
     char stored_ssid[WIFI_SSID_CAPACITY];
     nvs_handle_t handle;
@@ -70,12 +67,7 @@ enum plat_credentials_result plat_credentials_load(
     }
 
     password_capacity = sizeof credentials->password;
-    result = nvs_get_str(
-        handle,
-        NVS_WIFI_PASSWORD_KEY,
-        credentials->password,
-        &password_capacity
-    );
+    result = nvs_get_str(handle, NVS_WIFI_PASSWORD_KEY, credentials->password, &password_capacity);
     nvs_close(handle);
 
     if (result == ESP_ERR_NVS_NOT_FOUND)
@@ -105,8 +97,7 @@ bool plat_credentials_store(char const* ssid, char const* password)
     }
     ssid_length = strlen(ssid);
     password_length = strlen(password);
-    if (ssid_length == 0U || ssid_length >= WIFI_SSID_CAPACITY ||
-        password_length >= PLAT_WIFI_PASSWORD_CAPACITY)
+    if (ssid_length == 0U || ssid_length >= WIFI_SSID_CAPACITY || password_length >= PLAT_WIFI_PASSWORD_CAPACITY)
     {
         return false;
     }
@@ -131,14 +122,14 @@ bool plat_credentials_store(char const* ssid, char const* password)
 
 void plat_credentials_clear(struct plat_wifi_credentials* credentials)
 {
-    volatile uint8_t* byte;
+    uint8_t volatile* byte;
     size_t index;
 
     if (credentials == NULL)
     {
         return;
     }
-    byte = (volatile uint8_t*) credentials;
+    byte = (uint8_t volatile*) credentials;
     for (index = 0U; index < sizeof *credentials; ++index)
     {
         byte[index] = 0U;

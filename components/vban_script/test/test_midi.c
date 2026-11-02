@@ -16,9 +16,9 @@ static struct config cfg;
 static void init_cfg(void)
 {
     memset(&cfg, 0, sizeof cfg);
-    cfg.midi[0].id = 1;
-    cfg.midi[0].name = "MIDI1";
-    cfg.n_midi = 1U;
+    cfg.midi_out[0].id = 1;
+    cfg.midi_out[0].name = "MIDI1";
+    cfg.n_midi_out = 1U;
 }
 
 static int compile_script(char const* script, struct vs_script* out)
@@ -83,7 +83,7 @@ TEST_CASE("compile data and multiple MIDI messages", "[vban_script]")
 TEST_CASE("compile a long MIDI data payload", "[vban_script]")
 {
     struct vs_script s;
-    int i;
+    uint16_t i;
 
     init_cfg();
     // long "data" payload -> streamed into the arena (no large stack buffer)
@@ -92,16 +92,16 @@ TEST_CASE("compile a long MIDI data payload", "[vban_script]")
         int n = 0;
 
         n += snprintf(big + n, sizeof big - (size_t) n, "SendMidi(\"vban1\", \"data\"");
-        for (i = 0; i < 300; ++i)
+        for (i = 0U; i < 300U; ++i)
         {
-            n += snprintf(big + n, sizeof big - (size_t) n, ", %d", i & 0xFF);
+            n += snprintf(big + n, sizeof big - (size_t) n, ", %u", i & 0xFFU);
         }
         (void) snprintf(big + n, sizeof big - (size_t) n, ");");
         TEST_ASSERT_EQUAL(VS_OK, compile_script(big, &s));
         TEST_ASSERT_TRUE(s.n == 1U && s.cmd[0].midi_len == 300U);
-        for (i = 0; i < 300; ++i)
+        for (i = 0U; i < 300U; ++i)
         {
-            TEST_ASSERT_EQUAL_UINT8((uint8_t) (i & 0xFF), s.cmd[0].midi[i]);
+            TEST_ASSERT_EQUAL_UINT8((uint8_t) (i & 0xFFU), s.cmd[0].midi[i]);
         }
     }
 }

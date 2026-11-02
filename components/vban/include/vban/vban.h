@@ -39,7 +39,7 @@ enum vban_protocol
     /** Text sub-protocol. */
     VBAN_PROTOCOL_TEXT = 0x40,
     /** Service sub-protocol. */
-    VBAN_PROTOCOL_SERVICE = 0x60
+    VBAN_PROTOCOL_SERVICE = 0x60,
 };
 
 /** Bit-rate indices used by the provided builders. */
@@ -52,14 +52,14 @@ enum vban_sr_index
      */
     VBAN_SR_INDEX_NONE = 0,
     /** 256000 bps, used by the TEXT builder. */
-    VBAN_SR_INDEX_TEXT_256000 = 18
+    VBAN_SR_INDEX_TEXT_256000 = 18,
 };
 
 /** SERIAL format_bit data types used by this header. */
 enum vban_serial_type
 {
     /** MIDI serial payload. */
-    VBAN_SERIAL_TYPE_MIDI = 0x10
+    VBAN_SERIAL_TYPE_MIDI = 0x10,
 };
 
 /** TXT format_bit data types. */
@@ -70,7 +70,7 @@ enum vban_text_type
     /** UTF-8 text payload. */
     VBAN_TEXT_TYPE_UTF8 = 0x10,
     /** Wide-character text payload. */
-    VBAN_TEXT_TYPE_WCHAR = 0x20
+    VBAN_TEXT_TYPE_WCHAR = 0x20,
 };
 
 /*
@@ -105,7 +105,7 @@ enum vban_result
     /** The output buffer was too small. */
     VBAN_ERROR_BUFFER_TOO_SMALL = -3,
     /** A size calculation could not be represented by size_t. */
-    VBAN_ERROR_SIZE_OVERFLOW = -4
+    VBAN_ERROR_SIZE_OVERFLOW = -4,
 };
 
 #ifdef _MSC_VER
@@ -239,8 +239,9 @@ static inline int vban_private_build_header(struct vban_header* header, const st
 static inline int
 vban_build_text_header(struct vban_header* header, char const* stream_name, size_t stream_name_length, uint32_t frame)
 {
-    const struct vban_private_header_parameters parameters = {stream_name, stream_name_length,  frame, VBAN_TEXT_FORMAT_SR,
-                                                              0U,          VBAN_TEXT_FORMAT_BIT};
+    const struct vban_private_header_parameters parameters = {
+        stream_name, stream_name_length, frame, VBAN_TEXT_FORMAT_SR, 0U, VBAN_TEXT_FORMAT_BIT,
+    };
 
     return vban_private_build_header(header, &parameters);
 }
@@ -250,8 +251,9 @@ static inline int vban_build_midi_header(
     struct vban_header* header, char const* stream_name, size_t stream_name_length, uint32_t frame, bool more_fragments
 )
 {
-    struct vban_private_header_parameters parameters = {stream_name,         stream_name_length,    frame,
-                                                        VBAN_MIDI_FORMAT_SR, VBAN_MIDI_NBS_DEFAULT, VBAN_MIDI_FORMAT_BIT};
+    struct vban_private_header_parameters parameters = {
+        stream_name, stream_name_length, frame, VBAN_MIDI_FORMAT_SR, VBAN_MIDI_NBS_DEFAULT, VBAN_MIDI_FORMAT_BIT,
+    };
 
     if (more_fragments)
     {

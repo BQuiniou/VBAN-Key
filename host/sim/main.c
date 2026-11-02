@@ -57,6 +57,15 @@ static bool read_pressed(void* ctx, int gpi_pin)
     return false;
 }
 
+static void write_gpo(void* ctx, const struct cfg_gpo* gpo, bool high)
+{
+    char line[64];
+
+    (void) ctx;
+    (void) snprintf(line, sizeof line, "GPO %d WRITE %s (GPIO%d)", gpo->id, high ? "HIGH" : "LOW", gpo->gpo_pin);
+    sim_log_info(line);
+}
+
 static uint32_t now_ms(void* ctx)
 {
     struct timespec now;
@@ -209,7 +218,7 @@ int main(int argc, char** argv)
     }
     sim_exec_init(&exec, runtime_instance.n, &cfg, send ? &net : NULL);
     state = (struct sim_state) {&runtime_instance, &cfg, &exec, {false}};
-    io = (struct runtime_io) {&state, read_pressed, now_ms, fire_script};
+    io = (struct runtime_io) {&state, read_pressed, now_ms, fire_script, write_gpo};
 
     sim_log_banner("VBAN-Key native simulator");
     if (send)

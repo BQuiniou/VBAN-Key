@@ -19,9 +19,13 @@
 #define CONFIG_BUFFER_CAPACITY   (16U * 1024U)
 #define ERROR_BUFFER_CAPACITY    256U
 #define RUNTIME_POLL_INTERVAL_MS 10U
+#define TEXT_IN_STACK_SIZE       6144U
+#define TEXT_IN_PRIORITY         5U
+#define TEXT_IN_TIMEOUT_MS       1000U
 
 static char const* TAG = "vban-key";
 static char config_buffer[CONFIG_BUFFER_CAPACITY];
+static char text_in_buffer[VBAN_MAX_PAYLOAD_SIZE + 1U];
 static struct config config_instance;
 static struct runtime runtime_instance;
 static struct vban_net network_instance;
@@ -38,15 +42,63 @@ static uint32_t runtime_now_ms(void* ctx)
     return plat_time_millis();
 }
 
+static void runtime_write_gpo(void* ctx, const struct cfg_gpo* gpo, bool high)
+{
+    (void) ctx;
+    ESP_LOGI(TAG, "GPO %d WRITE %s (GPIO%d)", gpo->id, high ? "HIGH" : "LOW", gpo->gpo_pin);
+    plat_gpio_write(gpo->gpo_pin, high);
+}
+
+static struct runtime_io const runtime_io = {
+    .ctx = NULL,
+    .read_pressed = runtime_read_pressed,
+    .now_ms = runtime_now_ms,
+    .fire = plat_exec_fire,
+    .write_gpo = runtime_write_gpo,
+};
+
+static void text_in_task(void* ctx)
+{
+    char error[ERROR_BUFFER_CAPACITY];
+
+    (void) ctx;
+    for (;;)
+    {
+        int const stream = vban_net_receive_text(&network_instance, TEXT_IN_TIMEOUT_MS, text_in_buffer, sizeof(text_in_buffer));
+
+        if (stream < 0)
+        {
+            continue;
+        }
+        error[0] = '\0';
+        if (runtime_receive_text(&runtime_instance, &runtime_io, text_in_buffer, error, sizeof(error)) != RUNTIME_OK ||
+            error[0] != '\0')
+        {
+            ESP_LOGW(TAG, "Text stream %s: %s", config_instance.text_in[stream].name, error);
+        }
+    }
+}
+
+static bool configure_gpos(void)
+{
+    size_t index;
+
+    for (index = 0U; index < config_instance.n_gpos; ++index)
+    {
+        struct cfg_gpo const* gpo = &config_instance.gpos[index];
+
+        if (!plat_gpio_configure_output(gpo->gpo_pin, runtime_gpo_level(gpo, false)))
+        {
+            ESP_LOGE(TAG, "Cannot configure GPO %d on GPIO%d", gpo->id, gpo->gpo_pin);
+            return false;
+        }
+        ESP_LOGI(TAG, "GPO %d: GPIO%d", gpo->id, gpo->gpo_pin);
+    }
+    return true;
+}
+
 void app_main(void)
 {
-    static struct runtime_io const runtime_io = {
-        .ctx = NULL,
-        .read_pressed = runtime_read_pressed,
-        .now_ms = runtime_now_ms,
-        .fire = plat_exec_fire,
-    };
-
     char error[ERROR_BUFFER_CAPACITY];
     TickType_t last_wake;
     size_t config_length;
@@ -101,6 +153,11 @@ void app_main(void)
             config_instance.buttons[index].type == BUTTON_LATCH ? "latch" : "momentary"
         );
     }
+    if (!configure_gpos())
+    {
+        config_free(&config_instance);
+        return;
+    }
 
     ESP_LOGI(TAG, "Configuration loaded: %u button(s)", (unsigned int) runtime_instance.n);
     if (!plat_net_init(&config_instance, &network_instance))
@@ -119,6 +176,11 @@ void app_main(void)
 
     runtime_start(&runtime_instance, &runtime_io);
     ESP_LOGI(TAG, "Runtime started with a %u ms polling interval", (unsigned int) RUNTIME_POLL_INTERVAL_MS);
+    if (config_instance.n_text_in > 0U &&
+        xTaskCreate(text_in_task, "text-in", TEXT_IN_STACK_SIZE, NULL, TEXT_IN_PRIORITY, NULL) != pdPASS)
+    {
+        ESP_LOGE(TAG, "Cannot create the text receive task");
+    }
 
     last_wake = xTaskGetTickCount();
     for (;;)

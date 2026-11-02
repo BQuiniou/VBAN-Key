@@ -25,5 +25,7 @@ bool plat_gpio_configure_input(int pin);
  * reported as not pressed.
  */
 bool plat_gpio_read_pressed(int pin);
+bool plat_gpio_configure_output(int pin, bool level);
+void plat_gpio_write(int pin, bool level);
 
 #endif // PLAT_GPIO_H

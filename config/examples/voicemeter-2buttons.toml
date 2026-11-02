@@ -20,8 +20,8 @@ dhcp = true
 
 
 [global]
-# Config format version (SemVer). MAJOR mismatch -> loader refuses/migrates.
-version = "1.0.0"
+# Config format version (SemVer). MAJOR mismatch -> loader refuses.
+version = "2.0.0"
 
 # Log verbosity: fatal | error | warning | info | debug
 log_level = "info"
@@ -32,16 +32,16 @@ default_port       = 6980
 
 
 # STREAMS — "vbanN" in an action resolves by id + protocol:
-#   SendText("vbanN", ...) -> [[text]] block with id = N
-#   SendMidi("vbanN", ...) -> [[midi]] block with id = N
+#   SendText("vbanN", ...) -> [[text_out]] block with id = N
+#   SendMidi("vbanN", ...) -> [[midi_out]] block with id = N
 # text and midi ids are separate namespaces.
 
-[[text]]
+[[text_out]]
 id          = 1
 ip_address  = "192.168.1.57"         # optional if default_ip_address is set
 stream_name = "Command1"             # <=16 ASCII chars; default "Command<id>"
 
-[[midi]]
+[[midi_out]]
 id          = 1
 ip_address  = "192.168.1.57"
 stream_name = "MIDI1"                # default "MIDI<id>"

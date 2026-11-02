@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 Benoit Quiniou
+# SPDX-License-Identifier: MIT
+
+# GPO 1 follows button 1; GPO 2 follows "GPO[2] = 0|1;" received on the GPO1 TEXT stream.
+
+
+[wifi]
+ssid = "my-network"
+dhcp = true
+
+
+[global]
+version   = "2.0.0"
+log_level = "info"
+
+default_ip_address = "192.168.1.255"
+default_port       = 6980
+
+
+[[text_in]]
+stream_name = "GPO1"
+
+
+[[gpo]]
+id      = 1
+gpo_pin = 6
+
+[[gpo]]
+id         = 2
+gpo_pin    = 7
+active_low = false
+
+
+[[button]]
+id      = 1
+type    = "latch"
+gpi_pin = 4
+gpo     = 1

@@ -13,7 +13,7 @@ enum sim_kbd_action
     SIM_KBD_DOWN,
     SIM_KBD_UP,
     SIM_KBD_TAP,
-    SIM_KBD_QUIT
+    SIM_KBD_QUIT,
 };
 
 struct sim_kbd_event

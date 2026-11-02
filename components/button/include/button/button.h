@@ -16,14 +16,14 @@ enum button_event
 {
     BUTTON_NONE,
     BUTTON_ENTER_ON,
-    BUTTON_ENTER_OFF
+    BUTTON_ENTER_OFF,
 };
 
 enum button_flag
 {
     BTN_FLAG_RAW,
     BTN_FLAG_STABLE,
-    BTN_FLAG_ON
+    BTN_FLAG_ON,
 };
 
 struct button

@@ -11,14 +11,14 @@ dhcp = true
 
 
 [global]
-version   = "1.0.0"
+version   = "2.0.0"
 log_level = "info"
 
 default_ip_address = "192.168.1.57"  # VoiceMeeter host
 default_port       = 6980
 
 
-[[text]]
+[[text_out]]
 id          = 1
 stream_name = "Command1"
 

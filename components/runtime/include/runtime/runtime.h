@@ -16,6 +16,7 @@ struct live_button
 {
     struct button fsm;
     int gpi_pin;
+    const struct cfg_gpo* gpo;
     struct vs_script init;
     struct vs_script on;
     struct vs_script off;
@@ -26,6 +27,7 @@ struct runtime
 {
     struct live_button btn[CFG_MAX_BUTTONS];
     size_t n;
+    const struct config* cfg;
     uint8_t midi_arena[VS_MIDI_ARENA];
     struct vs_arena arena;
 };
@@ -36,16 +38,19 @@ struct runtime_io
     bool (*read_pressed)(void* ctx, int gpi_pin); /* already active-low normalized */
     uint32_t (*now_ms)(void* ctx);
     void (*fire)(void* ctx, size_t button_index, const struct vs_script* script); /* enqueue; cancels in-flight run */
+    void (*write_gpo)(void* ctx, const struct cfg_gpo* gpo, bool high);
 };
 
 enum runtime_result
 {
     RUNTIME_OK = 0,
-    RUNTIME_ERR
+    RUNTIME_ERR,
 };
 
 int runtime_build(struct runtime* rt, const struct config* cfg, char* err, size_t err_len);
 void runtime_start(struct runtime* rt, const struct runtime_io* io);
 void runtime_tick(struct runtime* rt, const struct runtime_io* io);
+bool runtime_gpo_level(const struct cfg_gpo* gpo, bool on);
+int runtime_receive_text(const struct runtime* rt, const struct runtime_io* io, char const* payload, char* err, size_t err_len);
 
 #endif // VBANKEY_RUNTIME_H

@@ -12,7 +12,7 @@ enum log_tag
 {
     LOG_TEXT,
     LOG_WAIT,
-    LOG_MIDI
+    LOG_MIDI,
 };
 
 struct mock_log
@@ -76,12 +76,12 @@ static void mock_send_midi(void* ctx, int stream_idx, uint8_t const* bytes, size
 static void init_cfg(struct config* cfg)
 {
     memset(cfg, 0, sizeof *cfg);
-    cfg->text[0].id = 1;
-    cfg->text[0].name = "Command1";
-    cfg->n_text = 1U;
-    cfg->midi[0].id = 1;
-    cfg->midi[0].name = "MIDI1";
-    cfg->n_midi = 1U;
+    cfg->text_out[0].id = 1;
+    cfg->text_out[0].name = "Command1";
+    cfg->n_text_out = 1U;
+    cfg->midi_out[0].id = 1;
+    cfg->midi_out[0].name = "MIDI1";
+    cfg->n_midi_out = 1U;
 }
 
 TEST_CASE("over-length SendText is rejected", "[vban_script]")
@@ -173,8 +173,7 @@ TEST_CASE("SendMidi data payload compiles; a tiny arena overflows", "[vban_scrip
 
 TEST_CASE("Wait abort cancels the run; a re-run completes", "[vban_script]")
 {
-    static char const cancellable[] =
-        "SendText(\"vban1\", x); Wait(50); SendMidi(\"vban1\", \"note-on\", 1, 60, 127);";
+    static char const cancellable[] = "SendText(\"vban1\", x); Wait(50); SendMidi(\"vban1\", \"note-on\", 1, 60, 127);";
     struct config cfg;
     uint8_t abuf[VS_MIDI_ARENA];
     struct vs_arena arena = {abuf, sizeof abuf, 0U};

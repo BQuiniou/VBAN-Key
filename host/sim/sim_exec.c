@@ -16,7 +16,7 @@ static void send_text(void* ctx, int stream_idx, char const* payload, size_t len
 {
     struct sim_worker* worker = ctx;
 
-    sim_log_text(worker->running_id, worker->cfg->text[stream_idx].name, payload, len);
+    sim_log_text(worker->running_id, worker->cfg->text_out[stream_idx].name, payload, len);
     if (worker->net != NULL)
     {
         vban_net_send_text(worker->net, stream_idx, payload, len);
@@ -27,7 +27,7 @@ static void send_midi(void* ctx, int stream_idx, uint8_t const* bytes, size_t le
 {
     struct sim_worker* worker = ctx;
 
-    sim_log_midi(worker->running_id, worker->cfg->midi[stream_idx].name, bytes, len);
+    sim_log_midi(worker->running_id, worker->cfg->midi_out[stream_idx].name, bytes, len);
     if (worker->net != NULL)
     {
         vban_net_send_midi(worker->net, stream_idx, bytes, len);

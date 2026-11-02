@@ -16,7 +16,7 @@
 enum sim_worker_flag
 {
     SIM_WORKER_HAS_PENDING,
-    SIM_WORKER_QUIT
+    SIM_WORKER_QUIT,
 };
 
 struct sim_worker
